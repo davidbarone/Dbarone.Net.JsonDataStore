@@ -1,2 +1,3 @@
 # Dbarone.Net.JsonDataStore
-Simple Json database.
+Simple Json data store based on https://github.com/ttu/json-flatfile-datastore.
+
