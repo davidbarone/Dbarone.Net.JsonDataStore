@@ -17,7 +17,9 @@ public class Storage : IStorage
 
     public JsonDocument Read()
     {
-        using (var reader = new StreamReader(_stream, Encoding.UTF8))
+        _stream.Position = 0;
+
+        using (var reader = new StreamReader(_stream, Encoding.UTF8, true, -1, true))
         {
             var str = reader.ReadToEnd();
             var doc = JsonDocument.Parse(str);
@@ -28,7 +30,7 @@ public class Storage : IStorage
     public void Write(JsonDocument document)
     {
         var str = document.ToJsonString();
-        using (var writer = new StreamWriter(_stream, Encoding.UTF8))
+        using (var writer = new StreamWriter(_stream, Encoding.UTF8, -1, true))
         {
             writer.Write(str);
         }

@@ -6,25 +6,34 @@ namespace Dbarone.Net.JsonDataStore;
 
 public class DataStore : IDataStore
 {
+    IStorage _storage;
     private Stream _stream;
     bool _autosave;
     private JsonDocument _jsonDocument;
 
     public DataStore(Stream stream, string password)
     {
-        this._stream = stream;
-
         if (!string.IsNullOrWhiteSpace(password))
         {
-            this._stream = stream.ToCryptoStream(password);
+            _stream = stream.ToCryptoStream(password);
         }
         else
         {
-            this._stream = stream;
+            _stream = stream;
         }
 
-        // load
-        Reload();
+        this._storage = new Storage(_stream);
+
+        // Create new document if stream is empty.
+        if (stream.Length == 0)
+        {
+            _jsonDocument = JsonDocument.Parse("{}");
+            Save();
+        }
+        else
+        {
+            Reload();
+        }
     }
 
     /// <summary>
@@ -83,12 +92,12 @@ public class DataStore : IDataStore
     /// <exception cref="NotImplementedException"></exception>
     public void Reload()
     {
-        this._jsonDocument = JsonDocument.Parse(this._stream);
+        this._jsonDocument = _storage.Read();
     }
 
     public void Save()
     {
-        throw new NotImplementedException();
+        _storage.Write(this._jsonDocument);
     }
 
     public JsonDocument Document => this._jsonDocument;
