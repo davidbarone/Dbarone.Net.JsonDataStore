@@ -1,0 +1,66 @@
+using system;
+using System.IO;
+
+namespace Dbarone.Net.JsonDataStore;
+
+public class JsonDataStore : IDataStore
+{
+    private Stream _stream;
+    bool _autosave;
+
+    /// <summary>
+    /// Creates an in=memory JsonDataStore.
+    /// </summary>
+    /// <param name="password">Optional password for the data store.</param>
+    /// <returns>Returns a JsonDataStore object.</returns>
+    public static JsonDataStore Create(string password = "", bool autoSave = false)
+    {
+        MemoryStream ms = new MemoryStream();
+        if (!string.IsNullOrWhiteSpace(password))
+        {
+            this._stream = ms.ToCryptoStream(password);
+        }
+        else
+        {
+            this._stream = ms;
+        }
+    }
+
+    /// <summary>
+    /// Creates a JsonDataStore at a specified file path.
+    /// </summary>
+    /// <param name="path">The file path.</param>
+    /// <param name="password">Optional password for the data store.</param>
+    /// <returns>Returns a JsonDataStore object.</returns>
+    public static JsonDataStore Create(string path, string password = "", , bool autoSave = false)
+    {
+        FileStream fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+        if (!string.IsNullOrWhiteSpace(password))
+        {
+            this._stream = fs.ToCryptoStream(password);
+        }
+        else
+        {
+            this._stream = fs;
+        }
+    }
+
+    /// <summary>
+    /// Opens an existing JsonDataStore at a specified file path.
+    /// </summary>
+    /// <param name="path">The file path.</param>
+    /// <param name="password">Optional password for the data store.</param>
+    /// <returns>Returns a JsonDataStore object.</returns>
+    public static JsonDataStore Open(string path, string password = "", , bool autoSave = false)
+    {
+        FileStream fs = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        if (!string.IsNullOrWhiteSpace(password))
+        {
+            this._stream = fs.ToCryptoStream(password);
+        }
+        else
+        {
+            this._stream = fs;
+        }
+    }
+}
