@@ -27,7 +27,7 @@ public static class Extensions
     {
         using (var stream = new MemoryStream())
         {
-            Utf8JsonWriter writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
+            Utf8JsonWriter writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false });
             jdoc.WriteTo(writer);
             writer.Flush();
             return Encoding.UTF8.GetString(stream.ToArray());

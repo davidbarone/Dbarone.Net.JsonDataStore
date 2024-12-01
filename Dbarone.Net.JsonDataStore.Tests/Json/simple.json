@@ -1,0 +1,15 @@
+{
+  "users": [
+    {
+      "firstName": "John",
+      "surname": "Doe",
+      "country": "USA"
+    },
+    {
+      "firstName": "Jane",
+      "surname": "Doe",
+      "country": "USA"
+    }
+  ],
+  "fooBarBaz": [{ "value": "Foo" }, { "value": "Bar" }, { "value": "Baz" }]
+}

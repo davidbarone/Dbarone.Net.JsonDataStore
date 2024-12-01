@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Dbarone.Net.JsonDataStore
@@ -9,6 +10,8 @@ namespace Dbarone.Net.JsonDataStore
     /// </summary>
     public interface IDataStore : IDisposable
     {
+        JsonDocument Document { get; }
+
         /// <summary>
         /// Gets a collection.
         /// </summary>

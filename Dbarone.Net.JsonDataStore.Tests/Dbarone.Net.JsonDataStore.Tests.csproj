@@ -24,4 +24,13 @@
     <ProjectReference Include="..\Dbarone.Net.JsonDataStore\Dbarone.Net.JsonDataStore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="Json\tiny.json" />
+    <Content Remove="Json\simple.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Json\tiny.json" />
+    <EmbeddedResource Include="Json\simple.json" />
+  </ItemGroup>
+
 </Project>
