@@ -11,6 +11,7 @@ namespace Dbarone.Net.JsonDataStore
     public interface IDataStore : IDisposable
     {
         JsonDocument Document { get; }
+        IStorage Storage { get; }
 
         /// <summary>
         /// Gets a collection.
@@ -30,5 +31,10 @@ namespace Dbarone.Net.JsonDataStore
         /// Reload json data from storage.
         /// </summary>
         void Reload();
+
+        /// <summary>
+        /// Calls the IStorage.Write() method to 
+        /// </summary>
+        void Checkpoint();
     }
 }

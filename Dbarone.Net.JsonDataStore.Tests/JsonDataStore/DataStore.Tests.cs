@@ -24,4 +24,14 @@ public class DataStoreTests : BaseTests
         Assert.Equal(expected, str);
     }
 
+    [Fact]
+    public void GetCollection()
+    {
+        var store = DataStore.Create();
+        var coll = store.GetCollection<FooBarBaz>();
+
+        Assert.IsType<List<FooBarBaz>>(coll.AsList);
+        Assert.NotNull(coll.AsList);
+        Assert.Equal(0, coll.Count);
+    }
 }

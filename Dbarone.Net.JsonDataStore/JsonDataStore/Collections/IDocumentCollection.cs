@@ -70,5 +70,8 @@ namespace Dbarone.Net.JsonDataStore
         /// Returns the number of items in the collection.
         /// </summary>
         int Count { get; }
+
+        List<T> AsList { get; }
+
     }
 }

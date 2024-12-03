@@ -81,9 +81,35 @@ public class DataStore : IDataStore
         throw new NotImplementedException();
     }
 
+    /// <summary>
+    /// Gets a collection. If no collection exists, a new one is automatically created.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection.</typeparam>
+    /// <param name="name">Optional name for the collection. If not specified, the element type name is used as the collection name.</param>
+    /// <returns>Returns a collection.</returns>
+    /// <exception cref="NotImplementedException"></exception>
     public IDocumentCollection<T> GetCollection<T>(string? name = null) where T : class
     {
-        throw new NotImplementedException();
+        name = name ?? typeof(T).Name;
+
+        var root = this._jsonDocument.RootElement;
+        JsonElement el;
+
+        var data = new Lazy<List<T>>(() =>
+        {
+            lock (this._jsonDocument)
+            {
+                if (root.TryGetProperty(name, out el))
+                {
+                    return el.EnumerateArray().Select(e => JsonSerializer.Deserialize<T>(el)!).ToList();
+                }
+                else
+                {
+                    return new List<T>();
+                }
+            }
+        });
+        return new DocumentCollection<T>(name, data);
     }
 
     /// <summary>
@@ -100,5 +126,11 @@ public class DataStore : IDataStore
         _storage.Write(this._jsonDocument);
     }
 
+    public void Checkpoint()
+    {
+        this._storage.Write(this._jsonDocument);
+    }
+
     public JsonDocument Document => this._jsonDocument;
+    public IStorage Storage => this._storage;
 }
