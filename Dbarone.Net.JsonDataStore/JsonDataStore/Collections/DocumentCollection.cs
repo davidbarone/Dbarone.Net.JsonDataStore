@@ -12,10 +12,13 @@ public class DocumentCollection<T> : IDocumentCollection<T>
 
     private readonly Lazy<List<T>> _data;
 
-    public DocumentCollection(string jsonPath, Lazy<List<T>> data)
+    private Action<IDocumentCollection<T>> _modificationAction;
+
+    public DocumentCollection(string jsonPath, Lazy<List<T>> data, Action<IDocumentCollection<T>> modificationAction)
     {
         this._jsonPath = jsonPath;
         this._data = data;
+        this._modificationAction = modificationAction;
     }
 
     public List<T> AsList => _data.Value;
@@ -46,12 +49,14 @@ public class DocumentCollection<T> : IDocumentCollection<T>
     public int Insert(T item)
     {
         _data.Value.Add(item);
+        _modificationAction(this);
         return 1;
     }
 
     public int Insert(IEnumerable<T> items)
     {
         _data.Value.AddRange(items);
+        _modificationAction(this);
         return items.Count();
     }
 

@@ -109,7 +109,15 @@ public class DataStore : IDataStore
                 }
             }
         });
-        return new DocumentCollection<T>(name, data);
+
+        var modificationAction = (IDocumentCollection<T> coll) =>
+        {
+            var root = _jsonDocument.RootElement;
+            var collectionEl = root.GetProperty(name);
+            collectionEl = JsonSerializer.SerializeToElement<List<T>>(coll.AsList);
+        };
+
+        return new DocumentCollection<T>(name, data, modificationAction);
     }
 
     /// <summary>
