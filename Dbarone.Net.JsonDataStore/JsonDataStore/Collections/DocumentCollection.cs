@@ -12,13 +12,13 @@ public class DocumentCollection<T> : IDocumentCollection<T>
 
     private readonly Lazy<List<T>> _data;
 
-    private Action<IDocumentCollection<T>> _modificationAction;
+    private Action<IDocumentCollection<T>> _modificationCallback;
 
-    public DocumentCollection(string jsonPath, Lazy<List<T>> data, Action<IDocumentCollection<T>> modificationAction)
+    public DocumentCollection(string jsonPath, Lazy<List<T>> data, Action<IDocumentCollection<T>> modificationCallback)
     {
         this._jsonPath = jsonPath;
         this._data = data;
-        this._modificationAction = modificationAction;
+        this._modificationCallback = modificationCallback;
     }
 
     public List<T> AsList => _data.Value;
@@ -28,6 +28,7 @@ public class DocumentCollection<T> : IDocumentCollection<T>
     public int Delete(Predicate<T> where)
     {
         var rows = _data.Value.RemoveAll(where);
+        _modificationCallback(this);
         return rows;
     }
 
@@ -49,14 +50,14 @@ public class DocumentCollection<T> : IDocumentCollection<T>
     public int Insert(T item)
     {
         _data.Value.Add(item);
-        _modificationAction(this);
+        _modificationCallback(this);
         return 1;
     }
 
     public int Insert(IEnumerable<T> items)
     {
         _data.Value.AddRange(items);
-        _modificationAction(this);
+        _modificationCallback(this);
         return items.Count();
     }
 
@@ -65,6 +66,7 @@ public class DocumentCollection<T> : IDocumentCollection<T>
         var data = _data.Value.Where(i => where(i)).ToList();
         var rowsAffected = data.Count();
         data.ForEach(i => i = transform(i));
+        _modificationCallback(this);
         return rowsAffected;
     }
 
@@ -80,6 +82,7 @@ public class DocumentCollection<T> : IDocumentCollection<T>
         {
             _data.Value.Add(item);
         }
+        _modificationCallback(this);
         return 1;
     }
 }

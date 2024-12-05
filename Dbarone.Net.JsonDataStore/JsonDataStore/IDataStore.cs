@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace Dbarone.Net.JsonDataStore
@@ -10,7 +11,7 @@ namespace Dbarone.Net.JsonDataStore
     /// </summary>
     public interface IDataStore : IDisposable
     {
-        JsonDocument Document { get; }
+        JsonNode Document { get; }
         IStorage Storage { get; }
 
         /// <summary>
@@ -32,9 +33,7 @@ namespace Dbarone.Net.JsonDataStore
         /// </summary>
         void Reload();
 
-        /// <summary>
-        /// Calls the IStorage.Write() method to 
-        /// </summary>
-        void Checkpoint();
+        //void BeginTransaction();
+
     }
 }

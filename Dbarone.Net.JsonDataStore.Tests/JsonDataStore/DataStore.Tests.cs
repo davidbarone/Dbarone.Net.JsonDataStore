@@ -34,4 +34,18 @@ public class DataStoreTests : BaseTests
         Assert.NotNull(coll.AsList);
         Assert.Equal(0, coll.Count);
     }
+
+    [Fact]
+    public void ModificationAction()
+    {
+        // Tests that any modifications to collections are saved back to store
+        var store = DataStore.Create();
+        var coll = store.GetCollection<FooBarBaz>();
+        coll.Insert(new FooBarBaz { Value = "foo" });
+        Assert.Single(coll.AsList);
+
+        // Get another copy of collection - should have same item in it.
+        var coll2 = store.GetCollection<FooBarBaz>();
+        Assert.Single(coll2.AsList);
+    }
 }

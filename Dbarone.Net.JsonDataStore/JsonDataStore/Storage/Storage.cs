@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Dbarone.Net.JsonDataStore;
 
@@ -15,7 +16,7 @@ public class Storage : IStorage
         this._stream = stream;
     }
 
-    public JsonDocument Read()
+    public JsonDocument ReadDocument()
     {
         _stream.Position = 0;
 
@@ -27,9 +28,30 @@ public class Storage : IStorage
         }
     }
 
-    public void Write(JsonDocument document)
+    public JsonNode ReadNode()
+    {
+        _stream.Position = 0;
+
+        using (var reader = new StreamReader(_stream, Encoding.UTF8, true, -1, true))
+        {
+            var str = reader.ReadToEnd();
+            var node = JsonObject.Parse(str)!;
+            return node;
+        }
+    }
+
+    public void WriteDocument(JsonDocument document)
     {
         var str = document.ToJsonString();
+        using (var writer = new StreamWriter(_stream, Encoding.UTF8, -1, true))
+        {
+            writer.Write(str);
+        }
+    }
+
+    public void WriteNode(JsonNode node)
+    {
+        var str = node.ToJsonString();
         using (var writer = new StreamWriter(_stream, Encoding.UTF8, -1, true))
         {
             writer.Write(str);

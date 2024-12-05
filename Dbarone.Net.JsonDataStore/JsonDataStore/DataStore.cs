@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Dbarone.Net.JsonDataStore;
 
@@ -9,9 +10,12 @@ public class DataStore : IDataStore
     IStorage _storage;
     private Stream _stream;
     bool _autosave;
-    private JsonDocument _jsonDocument;
 
-    public DataStore(Stream stream, string password)
+    // Note we use mutable JsonNode instead of immutable JsonDocument.
+    // https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/use-dom?pivots=dotnet-6-0
+    private JsonNode _dom;
+
+    public DataStore(Stream stream, string password, bool autoSave = false)
     {
         if (!string.IsNullOrWhiteSpace(password))
         {
@@ -27,7 +31,7 @@ public class DataStore : IDataStore
         // Create new document if stream is empty.
         if (stream.Length == 0)
         {
-            _jsonDocument = JsonDocument.Parse("{}");
+            _dom = JsonNode.Parse("{}")!;
             Save();
         }
         else
@@ -92,32 +96,28 @@ public class DataStore : IDataStore
     {
         name = name ?? typeof(T).Name;
 
-        var root = this._jsonDocument.RootElement;
-        JsonElement el;
-
         var data = new Lazy<List<T>>(() =>
         {
-            lock (this._jsonDocument)
+            lock (this._dom)
             {
-                if (root.TryGetProperty(name, out el))
+                if (_dom[name] is null)
                 {
-                    return el.EnumerateArray().Select(e => JsonSerializer.Deserialize<T>(el)!).ToList();
+                    return new List<T>();
                 }
                 else
                 {
-                    return new List<T>();
+                    return _dom[name].AsArray().Select(e => JsonSerializer.Deserialize<T>(e)).ToList()!;
                 }
             }
         });
 
-        var modificationAction = (IDocumentCollection<T> coll) =>
+        var modificationCallback = (IDocumentCollection<T> coll) =>
         {
-            var root = _jsonDocument.RootElement;
-            var collectionEl = root.GetProperty(name);
-            collectionEl = JsonSerializer.SerializeToElement<List<T>>(coll.AsList);
+            JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
+            _dom[name] = node;
         };
 
-        return new DocumentCollection<T>(name, data, modificationAction);
+        return new DocumentCollection<T>(name, data, modificationCallback);
     }
 
     /// <summary>
@@ -126,19 +126,14 @@ public class DataStore : IDataStore
     /// <exception cref="NotImplementedException"></exception>
     public void Reload()
     {
-        this._jsonDocument = _storage.Read();
+        this._dom = _storage.ReadNode();
     }
 
     public void Save()
     {
-        _storage.Write(this._jsonDocument);
+        _storage.WriteNode(this._dom);
     }
 
-    public void Checkpoint()
-    {
-        this._storage.Write(this._jsonDocument);
-    }
-
-    public JsonDocument Document => this._jsonDocument;
+    public JsonNode Document => this._dom;
     public IStorage Storage => this._storage;
 }
