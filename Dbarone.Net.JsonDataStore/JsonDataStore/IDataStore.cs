@@ -20,7 +20,7 @@ namespace Dbarone.Net.JsonDataStore
         /// <typeparam name="T">The element type.</typeparam>
         /// <param name="name">Optional collection name. Defaults to the element type name.</param>
         /// <returns>Returns an IDocumentCollection.</returns>
-        IDocumentCollection<T> GetCollection<T>(string? name = null) where T : class;
+        IDocumentCollection<T> GetCollection<T>(string? name = null, ITransaction? transaction = null) where T : class;
 
         /// <summary>
         /// Saves the contents of the json file to storage.
@@ -33,7 +33,6 @@ namespace Dbarone.Net.JsonDataStore
         /// </summary>
         void Reload();
 
-        //void BeginTransaction();
-
+        ITransaction BeginTransaction();
     }
 }

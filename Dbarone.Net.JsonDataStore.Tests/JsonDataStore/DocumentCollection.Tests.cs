@@ -36,4 +36,21 @@ public class DocumentCollectionTests : BaseTests
         Assert.Equal(2, users.Count);
         Assert.All(users.AsList, user => Assert.Equal("UK", user.Country));
     }
+
+    [Fact]
+    public void Delete()
+    {
+        var stream = this.GetJsonStream("simple.json");
+        var store = DataStore.Open(stream);
+        var users = store.GetCollection<User>("users");
+
+        // Update all users country
+        Assert.Equal(2, users.Count);
+
+        var deleted = users.Delete(u => u.FirstName == "John");
+        Assert.Equal(1, deleted);
+
+        // Asserts
+        Assert.Equal(1, users.Count);   // 1 row remains
+    }
 }

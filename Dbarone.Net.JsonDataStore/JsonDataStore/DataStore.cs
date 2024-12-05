@@ -92,7 +92,7 @@ public class DataStore : IDataStore
     /// <param name="name">Optional name for the collection. If not specified, the element type name is used as the collection name.</param>
     /// <returns>Returns a collection.</returns>
     /// <exception cref="NotImplementedException"></exception>
-    public IDocumentCollection<T> GetCollection<T>(string? name = null) where T : class
+    public IDocumentCollection<T> GetCollection<T>(string? name = null, ITransaction? transaction = null) where T : class
     {
         name = name ?? typeof(T).Name;
 
@@ -132,6 +132,11 @@ public class DataStore : IDataStore
     public void Save()
     {
         _storage.WriteNode(this._dom);
+    }
+
+    public ITransaction BeginTransaction()
+    {
+        return new Transaction(this);
     }
 
     public JsonNode Document => this._dom;
