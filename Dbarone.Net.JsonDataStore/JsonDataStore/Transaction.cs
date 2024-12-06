@@ -147,6 +147,11 @@ public class Transaction : ITransaction
             l.Parent = null;
             l = this.Leaf;
         }
+        if (this.Parent is not null)
+        {
+            this.Parent.Child = null;
+            this.Parent = null;
+        }
     }
 
     /// <summary>
@@ -178,6 +183,11 @@ public class Transaction : ITransaction
             l.Parent!.Child = null;
             l.Parent = null;
             l = this.Leaf;
+        }
+        if (this.Parent is not null)
+        {
+            this.Parent.Child = null;
+            this.Parent = null;
         }
     }
 
