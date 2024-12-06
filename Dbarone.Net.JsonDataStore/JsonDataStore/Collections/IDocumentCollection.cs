@@ -43,13 +43,7 @@ namespace Dbarone.Net.JsonDataStore
         /// <returns>Returns true if the operation is successful.</returns>
         int Insert(IEnumerable<T> items);
 
-        /// <summary>
-        /// Updates an item in the collection, or inserts a new value.
-        /// </summary>
-        /// <param name="where">The filter predicate.</param>
-        /// <param name="item">The new item to upsert.</param>
-        /// <returns>Returns true if an item is found. Returns false if new value is inserted.</returns>
-        int Upsert(Predicate<T> where, T item);
+        bool Any(Predicate<T> where);
 
         /// <summary>
         /// Updates a collection with an item.

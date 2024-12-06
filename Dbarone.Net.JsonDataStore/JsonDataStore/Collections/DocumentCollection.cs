@@ -25,6 +25,11 @@ public class DocumentCollection<T> : IDocumentCollection<T>
 
     public int Count => _data.Value.Count();
 
+    public bool Any(Predicate<T> where)
+    {
+        return _data.Value.Any(i => where(i));
+    }
+
     public int Delete(Predicate<T> where)
     {
         var rows = _data.Value.RemoveAll(where);
@@ -68,21 +73,5 @@ public class DocumentCollection<T> : IDocumentCollection<T>
         data.ForEach(i => i = transform(i));
         _modificationCallback(this);
         return rowsAffected;
-    }
-
-    public int Upsert(Predicate<T> where, T item)
-    {
-        var data = _data.Value.Where(i => where(i)).ToList();
-        var rowsAffected = data.Count();
-        if (rowsAffected > 0)
-        {
-            data.ForEach(i => i = item);
-        }
-        else
-        {
-            _data.Value.Add(item);
-        }
-        _modificationCallback(this);
-        return 1;
     }
 }

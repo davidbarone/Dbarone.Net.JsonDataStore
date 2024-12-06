@@ -53,4 +53,15 @@ public class DocumentCollectionTests : BaseTests
         // Asserts
         Assert.Equal(1, users.Count);   // 1 row remains
     }
+
+    [Fact]
+    public void Any()
+    {
+        var stream = this.GetJsonStream("simple.json");
+        var store = DataStore.Open(stream);
+        var users = store.GetCollection<User>("users");
+
+        // Update all users country
+        Assert.True(users.Any(u => u.FirstName == "John"));
+    }
 }

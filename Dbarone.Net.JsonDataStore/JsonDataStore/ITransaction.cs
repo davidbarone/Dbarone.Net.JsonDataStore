@@ -2,6 +2,9 @@ using System.Text.Json.Nodes;
 
 namespace Dbarone.Net.JsonDataStore;
 
+/// <summary>
+/// Defines operations that can occur on a transaction.
+/// </summary>
 public interface ITransaction
 {
     void Commit();
@@ -14,10 +17,8 @@ public interface ITransaction
     ITransaction Leaf { get; }
     int CurrentLevel { get; }
     bool Contains(ITransaction transaction);
-
     bool IsActive { get; }
     bool IsLeaf { get; }
-
     /// <summary>
     /// Gets a collection from the current transaction.
     /// </summary>
