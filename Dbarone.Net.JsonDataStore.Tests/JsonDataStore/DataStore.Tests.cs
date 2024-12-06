@@ -10,7 +10,7 @@ public class DataStoreTests : BaseTests
     {
         var stream = this.GetJsonStream("tiny.json");
         var store = DataStore.Open(stream);
-        var str = store.Document.ToJsonString();
+        var str = store.Dom.ToJsonString();
         var expected = @"{""fooBarBaz"":[{""value"":""foo""}]}";
         Assert.Equal(expected, str);
     }
@@ -19,7 +19,7 @@ public class DataStoreTests : BaseTests
     public void Create()
     {
         var store = DataStore.Create();
-        var str = store.Document.ToJsonString();
+        var str = store.Dom.ToJsonString();
         var expected = @"{}";
         Assert.Equal(expected, str);
     }

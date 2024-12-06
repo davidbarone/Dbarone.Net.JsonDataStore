@@ -25,7 +25,7 @@ public class Transaction : ITransaction
     // Note we use mutable JsonNode instead of immutable JsonDocument.
     // https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/use-dom?pivots=dotnet-6-0
     public JsonNode Dom { get; set; }
-    public virtual ITransaction? Parent { get; set; }
+    public ITransaction? Parent { get; set; }
     public int TransactionNestingLevel
     {
         get
@@ -43,7 +43,7 @@ public class Transaction : ITransaction
 
     public ITransaction? Child { get; set; }
 
-    public virtual ITransaction Root
+    public ITransaction Root
     {
         get
         {

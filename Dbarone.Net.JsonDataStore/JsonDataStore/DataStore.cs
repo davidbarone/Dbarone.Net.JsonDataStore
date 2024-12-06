@@ -137,8 +137,5 @@ public class DataStore : Transaction, IDataStore
         }
     }
 
-    public JsonNode Document => this.Dom;
     public IStorage Storage => this._storage;
-    public override ITransaction? Parent => null;
-    public override ITransaction Root => this;
 }

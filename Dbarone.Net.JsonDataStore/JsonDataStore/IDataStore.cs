@@ -11,7 +11,6 @@ namespace Dbarone.Net.JsonDataStore
     /// </summary>
     public interface IDataStore : IDisposable, ITransaction
     {
-        JsonNode Document { get; }
         IStorage Storage { get; }
 
         /// <summary>
