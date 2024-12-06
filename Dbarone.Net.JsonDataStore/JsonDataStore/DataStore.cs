@@ -5,17 +5,12 @@ using System.Text.Json.Nodes;
 
 namespace Dbarone.Net.JsonDataStore;
 
-public class DataStore : IDataStore
+public class DataStore : Transaction, IDataStore
 {
     IStorage _storage;
     private Stream _stream;
     bool _autosave;
-
-    // Note we use mutable JsonNode instead of immutable JsonDocument.
-    // https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/use-dom?pivots=dotnet-6-0
-    private JsonNode _dom;
-
-    public DataStore(Stream stream, string password, bool autoSave = false)
+    public DataStore(Stream stream, string password, bool autoSave = false) : base(null)
     {
         if (!string.IsNullOrWhiteSpace(password))
         {
@@ -31,7 +26,7 @@ public class DataStore : IDataStore
         // Create new document if stream is empty.
         if (stream.Length == 0)
         {
-            _dom = JsonNode.Parse("{}")!;
+            Dom = JsonNode.Parse("{}")!;
             Save();
         }
         else
@@ -85,40 +80,6 @@ public class DataStore : IDataStore
         throw new NotImplementedException();
     }
 
-    /// <summary>
-    /// Gets a collection. If no collection exists, a new one is automatically created.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection.</typeparam>
-    /// <param name="name">Optional name for the collection. If not specified, the element type name is used as the collection name.</param>
-    /// <returns>Returns a collection.</returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public IDocumentCollection<T> GetCollection<T>(string? name = null, ITransaction? transaction = null) where T : class
-    {
-        name = name ?? typeof(T).Name;
-
-        var data = new Lazy<List<T>>(() =>
-        {
-            lock (this._dom)
-            {
-                if (_dom[name] is null)
-                {
-                    return new List<T>();
-                }
-                else
-                {
-                    return _dom[name].AsArray().Select(e => JsonSerializer.Deserialize<T>(e)).ToList()!;
-                }
-            }
-        });
-
-        var modificationCallback = (IDocumentCollection<T> coll) =>
-        {
-            JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
-            _dom[name] = node;
-        };
-
-        return new DocumentCollection<T>(name, data, modificationCallback);
-    }
 
     /// <summary>
     /// Reloads the json document from storage.
@@ -126,19 +87,58 @@ public class DataStore : IDataStore
     /// <exception cref="NotImplementedException"></exception>
     public void Reload()
     {
-        this._dom = _storage.ReadNode();
+        this.Dom = _storage.ReadNode();
     }
 
     public void Save()
     {
-        _storage.WriteNode(this._dom);
+        _storage.WriteNode(this.Dom);
     }
 
-    public ITransaction BeginTransaction()
+    public override ITransaction BeginTransaction()
     {
-        return new Transaction(this);
+        if (this.Child is not null)
+        {
+            throw new Exception("Transaction already exists. To create a nested transaction, call BeginTransaction on leaf transaction.");
+        }
+        else
+        {
+            var t = new Transaction(this);
+            this.Child = t;
+            return t;
+        }
     }
 
-    public JsonNode Document => this._dom;
+    /// <summary>
+    /// Commits all transactions.
+    /// </summary>
+    /// <exception cref="NotImplementedException"></exception>
+    public override void Commit()
+    {
+        var l = this.Leaf;
+        while (l is not null)
+        {
+            l.Commit();
+            l = this.Leaf;
+        }
+    }
+
+    /// <summary>
+    /// Rollback of all transactions.
+    /// </summary>
+    /// <exception cref="NotImplementedException"></exception>
+    public override void Rollback()
+    {
+        ITransaction l = this.Leaf;
+        while (l is not null && l != this)
+        {
+            l.Rollback();
+            l = this.Leaf;
+        }
+    }
+
+    public JsonNode Document => this.Dom;
     public IStorage Storage => this._storage;
+    public override ITransaction? Parent => null;
+    public override ITransaction Root => this;
 }

@@ -9,18 +9,10 @@ namespace Dbarone.Net.JsonDataStore
     /// <summary>
     /// Interface for a generic json data store.
     /// </summary>
-    public interface IDataStore : IDisposable
+    public interface IDataStore : IDisposable, ITransaction
     {
         JsonNode Document { get; }
         IStorage Storage { get; }
-
-        /// <summary>
-        /// Gets a collection.
-        /// </summary>
-        /// <typeparam name="T">The element type.</typeparam>
-        /// <param name="name">Optional collection name. Defaults to the element type name.</param>
-        /// <returns>Returns an IDocumentCollection.</returns>
-        IDocumentCollection<T> GetCollection<T>(string? name = null, ITransaction? transaction = null) where T : class;
 
         /// <summary>
         /// Saves the contents of the json file to storage.
@@ -32,7 +24,5 @@ namespace Dbarone.Net.JsonDataStore
         /// Reload json data from storage.
         /// </summary>
         void Reload();
-
-        ITransaction BeginTransaction();
     }
 }
