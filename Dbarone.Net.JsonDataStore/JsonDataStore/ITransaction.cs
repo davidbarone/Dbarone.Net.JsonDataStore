@@ -12,10 +12,11 @@ public interface ITransaction
     ITransaction? Child { get; set; }
     ITransaction Root { get; }
     ITransaction Leaf { get; }
-    int TransactionNestingLevel { get; }
+    int CurrentLevel { get; }
     bool Contains(ITransaction transaction);
 
     bool IsActive { get; }
+    bool IsLeaf { get; }
 
     /// <summary>
     /// Gets a collection from the current transaction.

@@ -8,9 +8,9 @@ public class TransactionTests : BaseTests
         var store = DataStore.Open(stream);
 
         // Begin Transaction
-        store.BeginTransaction();
+        var transaction = store.BeginTransaction();
 
-        var users = store.GetCollection<User>("users");
+        var users = transaction.GetCollection<User>("users");
 
         // Update all users country
         Assert.Equal(2, users.Count);
@@ -33,9 +33,9 @@ public class TransactionTests : BaseTests
         var store = DataStore.Open(stream);
 
         // Begin Transaction
-        store.BeginTransaction();
+        var transaction = store.BeginTransaction();
 
-        var users = store.GetCollection<User>("users");
+        var users = transaction.GetCollection<User>("users");
 
         // Update all users country
         Assert.Equal(2, users.Count);
@@ -49,5 +49,30 @@ public class TransactionTests : BaseTests
         // Get collection again - should have 3 rows
         var users2 = store.GetCollection<User>("users");
         Assert.Equal(3, users2.Count);
+    }
+
+    [Fact]
+    public void NestingLevel()
+    {
+        var stream = this.GetJsonStream("simple.json");
+        var store = DataStore.Open(stream);
+
+        Assert.Equal(0, store.MaxLevel);
+
+        // Begin Transaction
+        var transaction1 = store.BeginTransaction();
+        Assert.Equal(1, store.MaxLevel);
+
+        // Begin Transaction
+        var transaction2 = transaction1.BeginTransaction();
+        Assert.Equal(2, store.MaxLevel);
+
+        // Rollback 2
+        transaction2.Rollback();
+        Assert.Equal(1, store.MaxLevel);
+
+        // Rollback 1
+        transaction1.Rollback();
+        Assert.Equal(0, store.MaxLevel);
     }
 }

@@ -95,47 +95,5 @@ public class DataStore : Transaction, IDataStore
         _storage.WriteNode(this.Dom);
     }
 
-    public override ITransaction BeginTransaction()
-    {
-        if (this.Child is not null)
-        {
-            throw new Exception("Transaction already exists. To create a nested transaction, call BeginTransaction on leaf transaction.");
-        }
-        else
-        {
-            var t = new Transaction(this);
-            this.Child = t;
-            return t;
-        }
-    }
-
-    /// <summary>
-    /// Commits all transactions.
-    /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
-    public override void Commit()
-    {
-        var l = this.Leaf;
-        while (l is not null && l != this)
-        {
-            l.Commit();
-            l = this.Leaf;
-        }
-    }
-
-    /// <summary>
-    /// Rollback of all transactions.
-    /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
-    public override void Rollback()
-    {
-        ITransaction l = this.Leaf;
-        while (l is not null && l != this)
-        {
-            l.Rollback();
-            l = this.Leaf;
-        }
-    }
-
     public IStorage Storage => this._storage;
 }
