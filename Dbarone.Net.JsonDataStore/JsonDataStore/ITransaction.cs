@@ -19,6 +19,8 @@ public interface ITransaction
     bool Contains(ITransaction transaction);
     bool IsActive { get; }
     bool IsLeaf { get; }
+    bool IsDirty { get; set; }
+
     /// <summary>
     /// Gets a collection from the current transaction.
     /// </summary>

@@ -117,6 +117,8 @@ public class Transaction : ITransaction
         }
     }
 
+    public bool IsDirty { get; set; }
+
     /// <summary>
     /// Starts a nested transaction.
     /// </summary>
@@ -143,12 +145,15 @@ public class Transaction : ITransaction
         while (l is not null && l != this)
         {
             l.Parent!.Dom = l.Dom.DeepClone();
+            l.Parent!.IsDirty = l.IsDirty;
             l.Parent.Child = null;
             l.Parent = null;
             l = this.Leaf;
         }
         if (this.Parent is not null)
         {
+            this.Parent!.Dom = this.Dom.DeepClone();
+            this.Parent!.IsDirty = this.IsDirty;
             this.Parent.Child = null;
             this.Parent = null;
         }
@@ -235,6 +240,7 @@ public class Transaction : ITransaction
                 {
                     throw new Exception("Cannot modify transaction which is not active. Has the transaction been closed?");
                 }
+                IsDirty = true;
             };
 
             return new DocumentCollection<T>(name, data, modificationCallback);

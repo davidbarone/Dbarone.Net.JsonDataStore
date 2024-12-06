@@ -1,7 +1,13 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 public class BaseTests
 {
+    protected string GetCallerName([CallerMemberName] string name = "")
+    {
+        return name;
+    }
+
     protected string GetJsonString(string resourceName)
     {
         var stream = GetJsonStream(resourceName);

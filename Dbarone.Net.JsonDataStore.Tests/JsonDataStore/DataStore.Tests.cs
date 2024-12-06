@@ -48,4 +48,22 @@ public class DataStoreTests : BaseTests
         var coll2 = store.GetCollection<FooBarBaz>();
         Assert.Single(coll2.AsList);
     }
+
+    [Fact]
+    public void AutoSave()
+    {
+        var fileName = $"{GetCallerName()}.json";
+        using (var store = DataStore.Create(fileName, "", true))
+        {
+            var transaction = store.BeginTransaction();
+            var coll1 = transaction.GetCollection<FooBarBaz>();
+            Assert.Equal(0, coll1.Count);
+            coll1.Insert(new FooBarBaz { Value = "foo" });
+            Assert.Equal(1, coll1.Count);
+            transaction.Commit();
+        }
+        var store2 = DataStore.Open(fileName, "", false);
+        var coll2 = store2.GetCollection<FooBarBaz>();
+        Assert.Equal(1, coll2.Count);
+    }
 }

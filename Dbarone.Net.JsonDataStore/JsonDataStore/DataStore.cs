@@ -9,7 +9,6 @@ public class DataStore : Transaction, IDataStore
 {
     IStorage _storage;
     private Stream _stream;
-    bool _autosave;
     public DataStore(Stream stream, string password, bool autoSave = false) : base(null)
     {
         if (!string.IsNullOrWhiteSpace(password))
@@ -27,11 +26,16 @@ public class DataStore : Transaction, IDataStore
         if (stream.Length == 0)
         {
             Dom = JsonNode.Parse("{}")!;
-            Save();
+            Save(false);
         }
         else
         {
             Reload();
+        }
+
+        if (autoSave)
+        {
+            Task.Run(() => Save(true));
         }
     }
 
@@ -55,7 +59,7 @@ public class DataStore : Transaction, IDataStore
     public static DataStore Create(string path, string password = "", bool autoSave = false)
     {
         FileStream fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
-        return new DataStore(fs, password);
+        return new DataStore(fs, password, autoSave);
     }
 
     /// <summary>
@@ -67,7 +71,7 @@ public class DataStore : Transaction, IDataStore
     public static DataStore Open(string path, string password = "", bool autoSave = false)
     {
         FileStream fs = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-        return new DataStore(fs, password);
+        return new DataStore(fs, password, autoSave);
     }
 
     public static DataStore Open(Stream stream, string password = "", bool autoSave = false)
@@ -77,9 +81,11 @@ public class DataStore : Transaction, IDataStore
 
     public void Dispose()
     {
-        throw new NotImplementedException();
+        {
+            this.Save(false);
+            this._stream.Close();
+        }
     }
-
 
     /// <summary>
     /// Reloads the json document from storage.
@@ -90,9 +96,20 @@ public class DataStore : Transaction, IDataStore
         this.Dom = _storage.ReadNode();
     }
 
-    public void Save()
+    public void Save(bool loop)
     {
-        _storage.WriteNode(this.Dom);
+        do
+        {
+            if (this.IsDirty)
+            {
+                _storage.WriteNode(this.Dom);
+                this.IsDirty = false;
+            }
+            if (loop)
+            {
+                Thread.Sleep(1000);
+            }
+        } while (loop);
     }
 
     public IStorage Storage => this._storage;

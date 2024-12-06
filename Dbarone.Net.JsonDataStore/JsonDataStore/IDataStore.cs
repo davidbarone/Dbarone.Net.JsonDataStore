@@ -17,7 +17,7 @@ namespace Dbarone.Net.JsonDataStore
         /// Saves the contents of the json file to storage.
         /// </summary>
         /// <param name="jsonData">The content to save.</param>
-        void Save();
+        void Save(bool loop);
 
         /// <summary>
         /// Reload json data from storage.
