@@ -116,7 +116,7 @@ public class DataStore : Transaction, IDataStore
     public override void Commit()
     {
         var l = this.Leaf;
-        while (l is not null)
+        while (l is not null && l != this)
         {
             l.Commit();
             l = this.Leaf;
