@@ -24,12 +24,6 @@ namespace Dbarone.Net.JsonDataStore
         IEnumerable<T> FullTextSearch(string text, bool caseSensitive = false);
 
         /// <summary>
-        /// Gets the next id value.
-        /// </summary>
-        /// <returns>Returns an integer value.</returns>
-        int GetNextId();
-
-        /// <summary>
         /// Inserts an item to the collection.
         /// </summary>
         /// <param name="item">The new item to be inserted.</param>
@@ -66,6 +60,5 @@ namespace Dbarone.Net.JsonDataStore
         int Count { get; }
 
         List<T> AsList { get; }
-
     }
 }

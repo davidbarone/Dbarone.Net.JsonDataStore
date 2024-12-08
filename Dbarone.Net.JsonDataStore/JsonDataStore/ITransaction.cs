@@ -28,4 +28,14 @@ public interface ITransaction
     /// <param name="name">Optional collection name. Defaults to the element type name.</param>
     /// <returns>Returns an IDocumentCollection.</returns>
     IDocumentCollection<T> GetCollection<T>(string? name = null) where T : class;
+
+    /// <summary>
+    /// Gets the next sequence number for a type.
+    /// </summary>
+    /// <typeparam name="T">The type.</typeparam>
+    /// <returns>Returns the next sequence number.</returns>
+    int Next<T>();
+
+    int Next(string name);
+
 }

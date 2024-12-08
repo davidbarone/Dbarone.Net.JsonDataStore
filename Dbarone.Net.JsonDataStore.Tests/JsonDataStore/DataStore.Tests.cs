@@ -93,10 +93,26 @@ public class DataStoreTests : BaseTests
         }
 
         // Try to open the encrypted file without password - should throw exception
-        using (var store = DataStore.Open(encryptFileName, "", true))
+        Assert.ThrowsAny<Exception>(() =>
         {
-            // do somehing here...
-        }
+            using (var store = DataStore.Open(encryptFileName, "", true))
+            {
+                // This should fail as file is encrypted...
+            }
+        });
+    }
 
+    [Fact]
+    public void Next()
+    {
+        var store = DataStore.Create("", false);
+        var id = store.Next<User>();
+        Assert.Equal(1, id);
+        id = store.Next<User>();
+        Assert.Equal(2, id);
+        id = store.Next<FooBarBaz>();
+        Assert.Equal(1, id);
+        id = store.Next<User>();
+        Assert.Equal(3, id);
     }
 }

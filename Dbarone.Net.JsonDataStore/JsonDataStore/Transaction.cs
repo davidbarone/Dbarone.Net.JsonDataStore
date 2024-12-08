@@ -246,4 +246,26 @@ public class Transaction : ITransaction
             return new DocumentCollection<T>(name, data, modificationCallback);
         }
     }
+
+    public int Next(string name)
+    {
+        int value = 0;
+        var coll = GetCollection<Sequence>("_sequences");
+        if (coll.Any(c => c.Name.Equals(name)))
+        {
+            coll.Update(c => c.Name.Equals(name), c => { c.Value++; return c; });
+            value = coll.Find(c => c.Name.Equals(name)).First().Value;
+        }
+        else
+        {
+            value = 1;
+            coll.Insert(new Sequence { Name = name, Value = 1 });
+        }
+        return value;
+    }
+
+    public int Next<T>()
+    {
+        return Next(typeof(T).Name);
+    }
 }
