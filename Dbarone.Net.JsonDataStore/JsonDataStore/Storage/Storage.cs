@@ -9,52 +9,76 @@ namespace Dbarone.Net.JsonDataStore;
 /// </summary>
 public class Storage : IStorage
 {
-    private Stream _stream;
+    protected string _jsonStr = "";
 
-    public Storage(Stream stream)
+    public Storage()
     {
-        this._stream = stream;
+        _jsonStr = "";
+    }
+
+    public Storage(string initialJson)
+    {
+        _jsonStr = string.IsNullOrEmpty(initialJson) ? "{}" : initialJson;
+    }
+
+    protected virtual Stream CreateStream(StreamMode mode)
+    {
+        return new MemoryStream(Encoding.UTF8.GetBytes(_jsonStr));
     }
 
     public JsonDocument ReadDocument()
     {
-        _stream.Position = 0;
-
-        using (var reader = new StreamReader(_stream, Encoding.UTF8, true, -1, true))
-        {
-            var str = reader.ReadToEnd();
-            var doc = JsonDocument.Parse(str);
-            return doc;
-        }
+        var str = Read();
+        return JsonDocument.Parse(str);
     }
 
     public JsonNode ReadNode()
     {
-        _stream.Position = 0;
-
-        using (var reader = new StreamReader(_stream, Encoding.UTF8, true, -1, true))
-        {
-            var str = reader.ReadToEnd();
-            var node = JsonObject.Parse(str)!;
-            return node;
-        }
+        var str = Read();
+        return JsonObject.Parse(str);
     }
 
     public void WriteDocument(JsonDocument document)
     {
-        var str = document.ToJsonString();
-        using (var writer = new StreamWriter(_stream, Encoding.UTF8, -1, true))
-        {
-            writer.Write(str);
-        }
+        var _jsonStr = document.ToJsonString();
+        Write(_jsonStr);
     }
 
     public void WriteNode(JsonNode node)
     {
-        var str = node.ToJsonString();
-        using (var writer = new StreamWriter(_stream, Encoding.UTF8, -1, true))
+        var _jsonStr = node.ToJsonString();
+        Write(_jsonStr);
+    }
+
+    public string Read()
+    {
+        using (var stream = CreateStream(StreamMode.READ))
         {
-            writer.Write(str);
+            using (var reader = new StreamReader(stream, Encoding.UTF8, true, -1, false))
+            {
+                var str = reader.ReadToEnd();
+                return str;
+            }
+        }
+    }
+
+    public void Write(string json)
+    {
+        var _jsonStr = json;
+        using (var stream = CreateStream(StreamMode.WRITE))
+        {
+            using (var writer = new StreamWriter(stream, Encoding.UTF8, -1, false))
+            {
+                writer.Write(json);
+            }
+        }
+    }
+
+    public bool IsNew
+    {
+        get
+        {
+            return string.IsNullOrEmpty(_jsonStr);
         }
     }
 }

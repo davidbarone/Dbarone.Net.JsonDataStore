@@ -7,18 +7,43 @@ namespace Dbarone.Net.JsonDataStore;
 
 public static class Extensions
 {
-    public static CryptoStream ToCryptoStream(this Stream stream, string password)
+    public static CryptoStream ToCryptoStream(this Stream stream, string password, CryptoStreamMode mode)
     {
         using (Aes aes = Aes.Create())
         {
-            aes.Key = Encoding.UTF8.GetBytes(password);
-            byte[] iv = aes.IV;
-            stream.Write(iv, 0, iv.Length);
+            var passwordBytes = Encoding.UTF8.GetBytes(password);
+            var keyBytes = SHA256.Create().ComputeHash(passwordBytes).Take(128 / 8).ToArray();
+            aes.Key = keyBytes;
+            if (mode == CryptoStreamMode.Write)
+            {
+                // write IV to start of stream
+                byte[] iv = aes.IV;
+                var a = iv.Length;
+                stream.Write(iv, 0, iv.Length);
+            }
+            else
+            {
+                // read IV at start of stream
+                byte[] iv = new byte[aes.BlockSize / 8];
+                stream.Read(iv, 0, aes.BlockSize / 8);
+                aes.IV = iv;
+            }
+
+            ICryptoTransform? encryptor = null;
+            if (mode == CryptoStreamMode.Write)
+            {
+                encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+            }
+            else
+            {
+                encryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+            }
 
             CryptoStream cryptoStream = new(
                 stream,
-                aes.CreateEncryptor(),
-                CryptoStreamMode.Write | CryptoStreamMode.Write);
+                encryptor,
+                mode,
+                false);
 
             return cryptoStream;
         }
@@ -32,6 +57,13 @@ public static class Extensions
         writer.Flush();
         stream.Position = 0; // Reset the stream position to the beginning
         return stream;
+    }
+
+    public static string ToText(this Stream stream)
+    {
+        StreamReader reader = new StreamReader(stream);
+        string text = reader.ReadToEnd();
+        return text;
     }
 
     public static JsonNode ToJsonObject(this string json)

@@ -14,5 +14,8 @@ public interface IStorage
 
     public JsonNode ReadNode();
     public void WriteNode(JsonNode node);
+    public bool IsNew { get; }
+    public string Read();
+    public void Write(string json);
 
 }

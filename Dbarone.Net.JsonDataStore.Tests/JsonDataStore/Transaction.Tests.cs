@@ -4,8 +4,8 @@ public class TransactionTests : BaseTests
     [Fact]
     public void Rollback()
     {
-        var stream = this.GetJsonStream("simple.json");
-        var store = DataStore.Open(stream);
+        var str = this.GetJsonStream("simple.json").ToText();
+        var store = DataStore.Create(str, false);
 
         // Begin Transaction
         var transaction = store.BeginTransaction();
@@ -29,8 +29,8 @@ public class TransactionTests : BaseTests
     [Fact]
     public void Commit()
     {
-        var stream = this.GetJsonStream("simple.json");
-        var store = DataStore.Open(stream);
+        var str = this.GetJsonStream("simple.json").ToText();
+        var store = DataStore.Create(str, false);
 
         // Begin Transaction
         var transaction = store.BeginTransaction();
@@ -54,8 +54,8 @@ public class TransactionTests : BaseTests
     [Fact]
     public void NestingLevel()
     {
-        var stream = this.GetJsonStream("simple.json");
-        var store = DataStore.Open(stream);
+        var str = this.GetJsonStream("simple.json").ToText();
+        var store = DataStore.Create(str, false);
 
         Assert.Equal(0, store.MaxLevel);
 

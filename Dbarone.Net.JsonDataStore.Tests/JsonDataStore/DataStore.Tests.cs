@@ -8,8 +8,8 @@ public class DataStoreTests : BaseTests
     [Fact]
     public void Open()
     {
-        var stream = this.GetJsonStream("tiny.json");
-        var store = DataStore.Open(stream);
+        var json = this.GetJsonStream("tiny.json").ToText();
+        var store = DataStore.Create(json, false);
         var str = store.Dom.ToJsonString();
         var expected = @"{""fooBarBaz"":[{""value"":""foo""}]}";
         Assert.Equal(expected, str);
@@ -18,7 +18,7 @@ public class DataStoreTests : BaseTests
     [Fact]
     public void Create()
     {
-        var store = DataStore.Create();
+        var store = DataStore.Create("", false);
         var str = store.Dom.ToJsonString();
         var expected = @"{}";
         Assert.Equal(expected, str);
@@ -27,7 +27,7 @@ public class DataStoreTests : BaseTests
     [Fact]
     public void GetCollection()
     {
-        var store = DataStore.Create();
+        var store = DataStore.Create("", false);
         var coll = store.GetCollection<FooBarBaz>();
 
         Assert.IsType<List<FooBarBaz>>(coll.AsList);
@@ -39,7 +39,7 @@ public class DataStoreTests : BaseTests
     public void ModificationAction()
     {
         // Tests that any modifications to collections are saved back to store
-        var store = DataStore.Create();
+        var store = DataStore.Create("", false);
         var coll = store.GetCollection<FooBarBaz>();
         coll.Insert(new FooBarBaz { Value = "foo" });
         Assert.Single(coll.AsList);
@@ -65,5 +65,38 @@ public class DataStoreTests : BaseTests
         var store2 = DataStore.Open(fileName, "", false);
         var coll2 = store2.GetCollection<FooBarBaz>();
         Assert.Equal(1, coll2.Count);
+    }
+
+    [Fact]
+    public void Encrypt()
+    {
+        var plainFileName = $"{GetCallerName()}_plain.json";
+        using (var store = DataStore.Create(plainFileName, "", true))
+        {
+            var transaction = store.BeginTransaction();
+            var coll1 = transaction.GetCollection<FooBarBaz>();
+            Assert.Equal(0, coll1.Count);
+            coll1.Insert(new FooBarBaz { Value = "foo" });
+            Assert.Equal(1, coll1.Count);
+            transaction.Commit();
+        }
+
+        var encryptFileName = $"{GetCallerName()}_encrypt.json";
+        using (var store = DataStore.Create(encryptFileName, "this is a file password", true))
+        {
+            var transaction = store.BeginTransaction();
+            var coll1 = transaction.GetCollection<FooBarBaz>();
+            Assert.Equal(0, coll1.Count);
+            coll1.Insert(new FooBarBaz { Value = "foo" });
+            Assert.Equal(1, coll1.Count);
+            transaction.Commit();
+        }
+
+        // Try to open the encrypted file without password - should throw exception
+        using (var store = DataStore.Open(encryptFileName, "", true))
+        {
+            // do somehing here...
+        }
+
     }
 }

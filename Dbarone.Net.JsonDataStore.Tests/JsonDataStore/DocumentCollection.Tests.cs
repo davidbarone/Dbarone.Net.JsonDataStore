@@ -7,7 +7,7 @@ public class DocumentCollectionTests : BaseTests
     [Fact]
     public void InsertOne()
     {
-        var store = DataStore.Create();
+        var store = DataStore.Create("", false);
         var coll = store.GetCollection<FooBarBaz>();
         coll.Insert(new FooBarBaz { Value = "foo" });
         Assert.Single(coll.AsList);
@@ -16,7 +16,7 @@ public class DocumentCollectionTests : BaseTests
     [Fact]
     public void InsertMany()
     {
-        var store = DataStore.Create();
+        var store = DataStore.Create("", false);
         var coll = store.GetCollection<FooBarBaz>();
         coll.Insert(new List<FooBarBaz> { { new FooBarBaz { Value = "foo" } }, { new FooBarBaz { Value = "bar" } } });
         Assert.Equal(2, coll.Count);
@@ -25,8 +25,8 @@ public class DocumentCollectionTests : BaseTests
     [Fact]
     public void Update()
     {
-        var stream = this.GetJsonStream("simple.json");
-        var store = DataStore.Open(stream);
+        var str = this.GetJsonStream("simple.json").ToText();
+        var store = DataStore.Create(str, false);
         var users = store.GetCollection<User>("users");
 
         // Update all users country
@@ -40,8 +40,8 @@ public class DocumentCollectionTests : BaseTests
     [Fact]
     public void Delete()
     {
-        var stream = this.GetJsonStream("simple.json");
-        var store = DataStore.Open(stream);
+        var str = this.GetJsonStream("simple.json").ToText();
+        var store = DataStore.Create(str, false);
         var users = store.GetCollection<User>("users");
 
         // Update all users country
@@ -57,8 +57,8 @@ public class DocumentCollectionTests : BaseTests
     [Fact]
     public void Any()
     {
-        var stream = this.GetJsonStream("simple.json");
-        var store = DataStore.Open(stream);
+        var str = this.GetJsonStream("simple.json").ToText();
+        var store = DataStore.Create(str, false);
         var users = store.GetCollection<User>("users");
 
         // Update all users country

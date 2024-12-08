@@ -8,30 +8,11 @@ namespace Dbarone.Net.JsonDataStore;
 public class DataStore : Transaction, IDataStore
 {
     IStorage _storage;
-    private Stream _stream;
-    public DataStore(Stream stream, string password, bool autoSave = false) : base(null)
+
+    public DataStore(IStorage storage, bool autoSave) : base(null)
     {
-        if (!string.IsNullOrWhiteSpace(password))
-        {
-            _stream = stream.ToCryptoStream(password);
-        }
-        else
-        {
-            _stream = stream;
-        }
-
-        this._storage = new Storage(_stream);
-
-        // Create new document if stream is empty.
-        if (stream.Length == 0)
-        {
-            Dom = JsonNode.Parse("{}")!;
-            Save(false);
-        }
-        else
-        {
-            Reload();
-        }
+        this._storage = storage;
+        Reload();
 
         if (autoSave)
         {
@@ -42,12 +23,12 @@ public class DataStore : Transaction, IDataStore
     /// <summary>
     /// Creates an in=memory DataStore.
     /// </summary>
-    /// <param name="password">Optional password for the data store.</param>
     /// <returns>Returns a DataStore object.</returns>
-    public static DataStore Create(string password = "", bool autoSave = false)
+    public static DataStore Create(string initialJson, bool autoSave)
     {
-        MemoryStream ms = new MemoryStream();
-        return new DataStore(ms, password);
+        IStorage storage = new Storage(initialJson);
+        var ds = new DataStore(storage, autoSave);
+        return ds;
     }
 
     /// <summary>
@@ -56,10 +37,11 @@ public class DataStore : Transaction, IDataStore
     /// <param name="path">The file path.</param>
     /// <param name="password">Optional password for the data store.</param>
     /// <returns>Returns a DataStore object.</returns>
-    public static DataStore Create(string path, string password = "", bool autoSave = false)
+    public static DataStore Create(string path, string password, bool autoSave)
     {
-        FileStream fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
-        return new DataStore(fs, password, autoSave);
+        IStorage storage = new FileStorage(path, FileMode.Create, password);
+        storage.Write("{}");
+        return Open(path, password, autoSave);
     }
 
     /// <summary>
@@ -68,23 +50,15 @@ public class DataStore : Transaction, IDataStore
     /// <param name="path">The file path.</param>
     /// <param name="password">Optional password for the data store.</param>
     /// <returns>Returns a DataStore object.</returns>
-    public static DataStore Open(string path, string password = "", bool autoSave = false)
+    public static DataStore Open(string path, string password, bool autoSave)
     {
-        FileStream fs = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-        return new DataStore(fs, password, autoSave);
-    }
-
-    public static DataStore Open(Stream stream, string password = "", bool autoSave = false)
-    {
-        return new DataStore(stream, password);
+        IStorage storage = new FileStorage(path, FileMode.Open, password);
+        return new DataStore(storage, autoSave);
     }
 
     public void Dispose()
     {
-        {
-            this.Save(false);
-            this._stream.Close();
-        }
+        this.Save(false);
     }
 
     /// <summary>
