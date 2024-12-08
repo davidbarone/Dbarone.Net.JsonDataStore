@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Dbarone.Net.JsonDataStore;
 
 namespace Dbarone.Net.JsonDataStore.Tests;
@@ -93,13 +94,15 @@ public class DataStoreTests : BaseTests
         }
 
         // Try to open the encrypted file without password - should throw exception
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.ThrowsAny<JsonException>(() =>
         {
             using (var store = DataStore.Open(encryptFileName, "", true))
             {
-                // This should fail as file is encrypted...
+                // This should fail as file is encrypted.do something here...
             }
         });
+
+
     }
 
     [Fact]
