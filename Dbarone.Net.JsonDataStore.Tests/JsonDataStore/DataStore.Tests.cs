@@ -37,6 +37,21 @@ public class DataStoreTests : BaseTests
     }
 
     [Fact]
+    public void GetDictionaryCollection()
+    {
+        var str = this.GetJsonStream("simple.json").ToText();
+        var store = DataStore.Create(str, false);
+        var users = store.GetCollection<User>("users");
+        Assert.Equal(2, users.Count);
+
+        // Now read same collection as dictionary
+        var usersDict = store.GetCollection("users");
+        Assert.Equal(2, usersDict.Count);
+        Assert.IsType<Dictionary<string, object>>(usersDict.AsList.First());
+        Assert.Equal("Doe", usersDict.AsList[0]["Surname"].ToString());
+    }
+
+    [Fact]
     public void ModificationAction()
     {
         // Tests that any modifications to collections are saved back to store
@@ -101,8 +116,6 @@ public class DataStoreTests : BaseTests
                 // This should fail as file is encrypted.do something here...
             }
         });
-
-
     }
 
     [Fact]

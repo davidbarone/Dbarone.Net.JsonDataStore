@@ -23,5 +23,6 @@ namespace Dbarone.Net.JsonDataStore
         /// Reload json data from storage.
         /// </summary>
         void Reload();
+
     }
 }

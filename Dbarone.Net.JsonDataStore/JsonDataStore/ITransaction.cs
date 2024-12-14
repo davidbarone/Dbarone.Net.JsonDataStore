@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Text.Json.Nodes;
 
 namespace Dbarone.Net.JsonDataStore;
@@ -28,6 +29,8 @@ public interface ITransaction
     /// <param name="name">Optional collection name. Defaults to the element type name.</param>
     /// <returns>Returns an IDocumentCollection.</returns>
     IDocumentCollection<T> GetCollection<T>(string? name = null) where T : class;
+    IDocumentCollection<object> GetCollection(Type elementTypeName, string? collectionName = null);
+    IDocumentCollection<Dictionary<string, object>> GetCollection(string collectionName);
 
     /// <summary>
     /// Gets the next sequence number for a type.
@@ -38,4 +41,9 @@ public interface ITransaction
 
     int Next(string name);
 
+    IDocumentCollection<Collection> GetCollections();
+    IDocumentCollection<Constraint> GetConstraints();
+    void AddConstraint<T>(Expression<Func<T, object>> attribute, bool? isNotNull, bool? isUnique, string? foreignKeyCollection, string? foreignKeyAttribute);
+
+    void CheckIntegrity(ITransaction transaction);
 }

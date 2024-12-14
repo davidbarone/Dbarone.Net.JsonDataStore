@@ -86,6 +86,7 @@ public class DataStore : Transaction, IDataStore
         } while (loop);
     }
 
+
     public IStorage Storage => this._storage;
 
 }

@@ -1,6 +1,8 @@
 using System.Diagnostics.Tracing;
+using System.Linq.Expressions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Dbarone.Net.Extensions;
 using Dbarone.Net.JsonDataStore;
 
 namespace Dbarone.Net.JsonDataStore;
@@ -144,6 +146,9 @@ public class Transaction : ITransaction
         var l = this.Leaf;
         while (l is not null && l != this)
         {
+            // Validate data in current transaction prior to saving
+            CheckIntegrity(l);
+
             l.Parent!.Dom = l.Dom.DeepClone();
             l.Parent!.IsDirty = l.IsDirty;
             l.Parent.Child = null;
@@ -156,6 +161,11 @@ public class Transaction : ITransaction
             this.Parent!.IsDirty = this.IsDirty;
             this.Parent.Child = null;
             this.Parent = null;
+        }
+        else
+        {
+            // we are at the root
+
         }
     }
 
@@ -267,5 +277,159 @@ public class Transaction : ITransaction
     public int Next<T>()
     {
         return Next(typeof(T).Name);
+    }
+
+
+    public void AddConstraint<T>(Expression<Func<T, object>> attribute, bool? isNotNull, bool? isUnique, string? foreignKeyCollection, string? foreignKeyAttribute)
+    {
+        var collectionName = typeof(T).Name;
+        var attributeName = attribute.GetMemberPath();
+
+        Constraint newConstraint = new Constraint
+        {
+            CollectionName = collectionName,
+            AttributeName = attributeName,
+            IsNotNull = isNotNull,
+            IsUnique = isUnique,
+            ForeignKeyCollectionName = foreignKeyCollection,
+            ForeignKeyAttributeName = foreignKeyAttribute
+        };
+
+        // Get current constraints
+        var constraints = this.GetCollection<Constraint>("_constraints");
+        var existing = constraints.AsList.FirstOrDefault(c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName));
+
+        if (existing is null)
+        {
+            // insert
+            constraints.Insert(newConstraint);
+        }
+        else
+        {
+            constraints.Update(c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName), c => newConstraint);
+        }
+    }
+
+    public IDocumentCollection<Constraint> GetConstraints()
+    {
+        var constraints = this.GetCollection<Constraint>("_constraints");
+        return constraints;
+    }
+
+    public IDocumentCollection<object> GetCollection(Type elementType, string? collectionName = null)
+    {
+        var name = collectionName ?? elementType.GetType().Name;
+
+        if (!this.IsLeaf)
+        {
+            throw new Exception("Must be on leaf transaction to get a collection.");
+        }
+        else
+        {
+            var data = new Lazy<List<object>>(() =>
+            {
+                lock (Dom)
+                {
+                    if (Dom[name] is null)
+                    {
+                        return new List<object>();
+                    }
+                    else
+                    {
+                        return Dom[name]!.AsArray().Select(e => JsonSerializer.Deserialize(e, elementType)).ToList()!;
+                    }
+                }
+            });
+
+            var modificationCallback = (IDocumentCollection<object> coll) =>
+            {
+                if (IsActive)
+                {
+                    JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
+                    Dom[name] = node;
+                }
+                else
+                {
+                    throw new Exception("Cannot modify transaction which is not active. Has the transaction been closed?");
+                }
+                IsDirty = true;
+            };
+
+            return new DocumentCollection<object>(name, data, modificationCallback);
+        }
+    }
+
+    public IDocumentCollection<Dictionary<string, object>> GetCollection(string collectionName)
+    {
+        var name = collectionName;
+
+        if (!this.IsLeaf)
+        {
+            throw new Exception("Must be on leaf transaction to get a collection.");
+        }
+        else
+        {
+            var data = new Lazy<List<Dictionary<string, object>>>(() =>
+            {
+                lock (Dom)
+                {
+                    if (Dom[name] is null)
+                    {
+                        return new List<Dictionary<string, object>>();
+                    }
+                    else
+                    {
+                        return Dom[name]!.AsArray().Select(e => JsonSerializer.Deserialize<Dictionary<string, object>>(e)).ToList()!;
+                    }
+                }
+            });
+
+            var modificationCallback = (IDocumentCollection<Dictionary<string, object>> coll) =>
+            {
+                if (IsActive)
+                {
+                    JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
+                    Dom[name] = node;
+                }
+                else
+                {
+                    throw new Exception("Cannot modify transaction which is not active. Has the transaction been closed?");
+                }
+                IsDirty = true;
+            };
+
+            return new DocumentCollection<Dictionary<string, object>>(name, data, modificationCallback);
+        }
+    }
+
+    public void CheckIntegrity(ITransaction transaction)
+    {
+        var constraints = transaction.GetConstraints().AsList;
+
+        // Null constraints
+        var notNullConstraints = constraints.Where(c => c.IsNotNull ?? false);
+
+        foreach (var constraint in notNullConstraints)
+        {
+            // Get collection
+            var collName = constraint.CollectionName;
+            var dictColl = transaction.GetCollection(collName);
+            foreach (var row in dictColl.AsList)
+            {
+                if (row is not null && row.ContainsKey(constraint.AttributeName) && row[constraint.AttributeName] is not null)
+                {
+                    // OK
+                }
+                else
+                {
+                    throw new ConstraintException($"Violation of not null constraint: Collection: {constraint.CollectionName}, Attribute: {constraint.AttributeName}");
+                }
+            }
+        }
+    }
+
+    public IDocumentCollection<Collection> GetCollections()
+    {
+        throw new NotImplementedException();
     }
 }

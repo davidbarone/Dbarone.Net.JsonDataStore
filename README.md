@@ -11,7 +11,7 @@ This library is a very simple json data store which can be used for creating qui
 - supports sequences (autonumbers)
 - supports simple integrity checks (not null, unique, referential)
 - automatic convertion to .NET types (POCO)
-- currently supports only strong-typed entities
+- supports strong-typed entities and dictionary types
 - transaction support, including nested transactions
 - supports in-memory and file-based json databases
 - supports plain-text and encrypted file-based json databases
