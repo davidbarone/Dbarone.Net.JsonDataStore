@@ -74,4 +74,18 @@ public class DocumentCollection<T> : IDocumentCollection<T>
         _modificationCallback(this);
         return rowsAffected;
     }
+
+    public int Upsert(Predicate<T> where, Func<T, T> update, T insert)
+    {
+        int rowsAffected;
+        if (Any(where))
+        {
+            rowsAffected = Update(where, update);
+        }
+        else
+        {
+            rowsAffected = Insert(insert);
+        }
+        return rowsAffected;
+    }
 }

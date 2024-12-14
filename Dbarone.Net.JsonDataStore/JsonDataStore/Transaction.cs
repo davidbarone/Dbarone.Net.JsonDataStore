@@ -260,7 +260,7 @@ public class Transaction : ITransaction
     public int Next(string name)
     {
         int value = 0;
-        var coll = GetCollection<Sequence>("_sequences");
+        var coll = GetSequences();
         if (coll.Any(c => c.Name.Equals(name)))
         {
             coll.Update(c => c.Name.Equals(name), c => { c.Value++; return c; });
@@ -296,7 +296,7 @@ public class Transaction : ITransaction
         };
 
         // Get current constraints
-        var constraints = this.GetCollection<Constraint>("_constraints");
+        var constraints = GetConstraints();
         var existing = constraints.AsList.FirstOrDefault(c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName));
 
         if (existing is null)
@@ -430,6 +430,13 @@ public class Transaction : ITransaction
 
     public IDocumentCollection<Collection> GetCollections()
     {
-        throw new NotImplementedException();
+        var coll = GetCollection<Collection>("_collections");
+        return coll;
+    }
+
+    public IDocumentCollection<Sequence> GetSequences()
+    {
+        var coll = GetCollection<Sequence>("_sequences");
+        return coll;
     }
 }

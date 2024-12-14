@@ -8,6 +8,8 @@ namespace Dbarone.Net.JsonDataStore;
 /// </summary>
 public interface ITransaction
 {
+    #region Transactions
+
     void Commit();
     void Rollback();
     ITransaction BeginTransaction();
@@ -22,6 +24,12 @@ public interface ITransaction
     bool IsLeaf { get; }
     bool IsDirty { get; set; }
 
+    #endregion
+
+    #region Collections
+
+    IDocumentCollection<Collection> GetCollections();
+
     /// <summary>
     /// Gets a collection from the current transaction.
     /// </summary>
@@ -32,6 +40,12 @@ public interface ITransaction
     IDocumentCollection<object> GetCollection(Type elementTypeName, string? collectionName = null);
     IDocumentCollection<Dictionary<string, object>> GetCollection(string collectionName);
 
+    #endregion
+
+    #region Sequences
+
+    IDocumentCollection<Sequence> GetSequences();
+
     /// <summary>
     /// Gets the next sequence number for a type.
     /// </summary>
@@ -41,9 +55,15 @@ public interface ITransaction
 
     int Next(string name);
 
-    IDocumentCollection<Collection> GetCollections();
+    #endregion
+
+    #region Constraints
+
     IDocumentCollection<Constraint> GetConstraints();
     void AddConstraint<T>(Expression<Func<T, object>> attribute, bool? isNotNull, bool? isUnique, string? foreignKeyCollection, string? foreignKeyAttribute);
 
     void CheckIntegrity(ITransaction transaction);
+
+    #endregion
+
 }

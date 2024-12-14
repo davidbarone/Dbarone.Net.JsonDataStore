@@ -48,6 +48,15 @@ namespace Dbarone.Net.JsonDataStore
         int Update(Predicate<T> where, Func<T, T> transform);
 
         /// <summary>
+        /// Updates or inserts data.
+        /// </summary>
+        /// <param name="where">The filter predicate. If 1 or more rows is found, the update is executed. Otherwise the row is inserted.</param>
+        /// <param name="update">The update function.</param>
+        /// <param name="insert">The row to insert.</param>
+        /// <returns>Returns the number of rows updated / inserted.</returns>
+        int Upsert(Predicate<T> where, Func<T, T> update, T insert);
+
+        /// <summary>
         /// Deletes items from a collection.
         /// </summary>
         /// <param name="where">The filter predicate.</param>
