@@ -426,6 +426,21 @@ public class Transaction : ITransaction
                 }
             }
         }
+
+        // Unique constraints
+        var uniqueConstraints = constraints.Where(c => c.IsUnique ?? false);
+
+        foreach (var constraint in uniqueConstraints)
+        {
+            // Get collection
+            var collName = constraint.CollectionName;
+            var dictColl = transaction.GetCollection(collName);
+            var values = dictColl.AsList.Select(i => i[constraint.AttributeName]);
+            if (values.Count() > values.Distinct().Count())
+            {
+                throw new ConstraintException($"Violation of unique constraint: Collection: {constraint.CollectionName}, Attribute: {constraint.AttributeName}");
+            }
+        }
     }
 
     public IDocumentCollection<Collection> GetCollections()
