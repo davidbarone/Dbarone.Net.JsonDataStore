@@ -279,11 +279,44 @@ public class Transaction : ITransaction
         return Next(typeof(T).Name);
     }
 
+    public void AddRequiredConstraint<T>(Expression<Func<T, object>> attribute)
+    {
+        AddConstraint<T, object>(attribute, ConstraintType.REQUIRED, null);
+    }
 
-    public void AddConstraint<T>(Expression<Func<T, object>> attribute, ConstraintType constraintType, string? referenceCollection, string? referenceAttribute)
+    public void AddUniqueConstraint<T>(Expression<Func<T, object>> attribute)
+    {
+        AddConstraint<T, object>(attribute, ConstraintType.UNIQUE, null);
+    }
+
+    public void AddReferenceConstraint<T, U>(Expression<Func<T, object>> attribute, Expression<Func<U, object>> references)
+    {
+        AddConstraint<T, U>(attribute, ConstraintType.REFERENCE, references);
+    }
+
+    public void DropConstraints<T>(Expression<Func<T, object>> attribute)
     {
         var collectionName = typeof(T).Name;
         var attributeName = attribute.GetMemberPath();
+
+        var constraints = GetConstraints();
+        constraints.Delete(
+            c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName));
+    }
+
+    private void AddConstraint<T, U>(Expression<Func<T, object>> attribute, ConstraintType constraintType, Expression<Func<U, object>>? references = null)
+    {
+        var collectionName = typeof(T).Name;
+        var attributeName = attribute.GetMemberPath();
+
+        string? referenceCollection = null;
+        string? referenceAttribute = null;
+
+        if (references is not null)
+        {
+            referenceCollection = typeof(U).Name;
+            referenceAttribute = references.GetMemberPath();
+        }
 
         Constraint newConstraint = new Constraint
         {
@@ -414,7 +447,7 @@ public class Transaction : ITransaction
                 }
                 else
                 {
-                    throw new ConstraintException($"Violation of not null constraint: Collection: {constraint.CollectionName}, Attribute: {constraint.AttributeName}");
+                    throw new ConstraintException($"Violation of not null constraint: Collection: {constraint.CollectionName}, Attribute: {constraint.AttributeName}.");
                 }
             }
         }
@@ -431,7 +464,29 @@ public class Transaction : ITransaction
             // Distinct does reference equality. Do groupby here to get number of distinct values.
             if (values.Count() > values.DistinctBy(v => v).Count())
             {
-                throw new ConstraintException($"Violation of unique constraint: Collection: {constraint.CollectionName}, Attribute: {constraint.AttributeName}");
+                throw new ConstraintException($"Violation of unique constraint: Collection: {constraint.CollectionName}, Attribute: {constraint.AttributeName}.");
+            }
+        }
+
+        // Reference Constraints
+        var referenceConstraints = constraints.Where(c => (c.ConstraintType & ConstraintType.REFERENCE) == ConstraintType.REFERENCE);
+
+        foreach (var constraint in referenceConstraints)
+        {
+            // Get collection
+            var collName = constraint.CollectionName;
+            var dictColl = transaction.GetCollection(collName);
+
+            // Get references collection
+            var referenceCollName = constraint.ReferenceCollectionName;
+            var referenceDictColl = transaction.GetCollection(referenceCollName!);
+
+            var values = dictColl.AsList.Select(i => i[constraint.AttributeName].ToString());   // TODO: ToString so Dictinct able to work
+            var referenceValues = referenceDictColl.AsList.Select(i => i[constraint.AttributeName].ToString());   // TODO: ToString so Dictinct able to work
+
+            if (values.Except(referenceValues).Any())
+            {
+                throw new ConstraintException($"Violation of reference constraint: Collection: {constraint.CollectionName}, Attribute: {constraint.AttributeName}, Reference: {constraint.ReferenceCollectionName}, Reference Attribute: {constraint.ReferenceAttributeName}.");
             }
         }
     }

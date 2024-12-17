@@ -13,7 +13,7 @@ public class ConstraintTests
             var t = store.BeginTransaction();
 
             // Not null constraint on FooBarBaz.Value
-            t.AddConstraint<FooBarBaz>(f => f.Value, ConstraintType.REQUIRED, null, null);
+            t.AddRequiredConstraint<FooBarBaz>(f => f.Value);
 
             var coll = t.GetCollection<FooBarBaz>();
             coll.Insert(new FooBarBaz { Value = null });    // null value not allowed!
@@ -32,7 +32,7 @@ public class ConstraintTests
             var t = store.BeginTransaction();
 
             // Unique constraint on FooBarBaz.Value
-            t.AddConstraint<FooBarBaz>(f => f.Value, ConstraintType.UNIQUE, null, null);
+            t.AddUniqueConstraint<FooBarBaz>(f => f.Value);
 
             var coll = t.GetCollection<FooBarBaz>();
             coll.Insert(new FooBarBaz { Value = "foo" });
@@ -40,4 +40,38 @@ public class ConstraintTests
             store.Commit(); // commit all transations, and force write of data
         });
     }
+
+    [Fact]
+    public void ReferenceConstraint()
+    {
+        var store = DataStore.Create("", false);
+
+        // Add product
+        var r = store.BeginTransaction();
+        var products = r.GetCollection<Product>();
+        products.Insert(new Product { ProductCode = "A", ProductName = "Product A" });
+
+        // Add sales table
+        var sales = r.GetCollection<Sales>();
+
+        // Add reference constraint
+        r.AddReferenceConstraint<Sales, Product>(s => s.ProductCode, p => p.ProductCode);
+
+        // Add 1 sales record which is valid
+        sales.Insert(new Sales { SalesDate = DateTime.Now, ProductCode = "A", Quantity = 1, SalesAmount = 10 });
+
+        r.Commit();
+
+        Assert.Throws<ConstraintException>(() =>
+        {
+            var u = store.BeginTransaction();
+
+            // Add 1 sales record which is not valid
+            var sales = u.GetCollection<Sales>();
+            sales.Insert(new Sales { SalesDate = DateTime.Now, ProductCode = "B", Quantity = 1, SalesAmount = 10 });
+
+            store.Commit(); // commit all transations, and force write of data
+        });
+    }
+
 }

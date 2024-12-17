@@ -60,8 +60,10 @@ public interface ITransaction
     #region Constraints
 
     IDocumentCollection<Constraint> GetConstraints();
-    void AddConstraint<T>(Expression<Func<T, object>> attribute, ConstraintType constraintType, string? referenceCollection, string? referenceAttribute);
-
+    void AddRequiredConstraint<T>(Expression<Func<T, object>> attribute);
+    void AddUniqueConstraint<T>(Expression<Func<T, object>> attribute);
+    void AddReferenceConstraint<T, U>(Expression<Func<T, object>> attribute, Expression<Func<U, object>> references);
+    void DropConstraints<T>(Expression<Func<T, object>> attribute);
     void CheckIntegrity(ITransaction transaction);
 
     #endregion
