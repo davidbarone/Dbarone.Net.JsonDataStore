@@ -108,6 +108,8 @@ public class DataStoreTests : BaseTests
             transaction.Commit();
         }
 
+        Thread.Sleep(100);  // allow file handle to release
+
         // Try to open the encrypted file without password - should throw exception
         Assert.ThrowsAny<JsonException>(() =>
         {

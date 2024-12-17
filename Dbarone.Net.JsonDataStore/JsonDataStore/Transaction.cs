@@ -280,7 +280,7 @@ public class Transaction : ITransaction
     }
 
 
-    public void AddConstraint<T>(Expression<Func<T, object>> attribute, bool? isNotNull, bool? isUnique, string? foreignKeyCollection, string? foreignKeyAttribute)
+    public void AddConstraint<T>(Expression<Func<T, object>> attribute, ConstraintType constraintType, string? referenceCollection, string? referenceAttribute)
     {
         var collectionName = typeof(T).Name;
         var attributeName = attribute.GetMemberPath();
@@ -289,25 +289,17 @@ public class Transaction : ITransaction
         {
             CollectionName = collectionName,
             AttributeName = attributeName,
-            IsNotNull = isNotNull,
-            IsUnique = isUnique,
-            ForeignKeyCollectionName = foreignKeyCollection,
-            ForeignKeyAttributeName = foreignKeyAttribute
+            ConstraintType = constraintType,
+            ReferenceCollectionName = referenceCollection,
+            ReferenceAttributeName = referenceAttribute
         };
 
         // Get current constraints
         var constraints = GetConstraints();
-        var existing = constraints.AsList.FirstOrDefault(c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName));
-
-        if (existing is null)
-        {
-            // insert
-            constraints.Insert(newConstraint);
-        }
-        else
-        {
-            constraints.Update(c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName), c => newConstraint);
-        }
+        constraints.Upsert(
+            c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName)
+            , c => newConstraint
+            , newConstraint);
     }
 
     public IDocumentCollection<Constraint> GetConstraints()
@@ -407,7 +399,7 @@ public class Transaction : ITransaction
         var constraints = transaction.GetConstraints().AsList;
 
         // Null constraints
-        var notNullConstraints = constraints.Where(c => c.IsNotNull ?? false);
+        var notNullConstraints = constraints.Where(c => (c.ConstraintType & ConstraintType.REQUIRED) == ConstraintType.REQUIRED);
 
         foreach (var constraint in notNullConstraints)
         {
@@ -428,15 +420,16 @@ public class Transaction : ITransaction
         }
 
         // Unique constraints
-        var uniqueConstraints = constraints.Where(c => c.IsUnique ?? false);
+        var uniqueConstraints = constraints.Where(c => (c.ConstraintType & ConstraintType.UNIQUE) == ConstraintType.UNIQUE);
 
         foreach (var constraint in uniqueConstraints)
         {
             // Get collection
             var collName = constraint.CollectionName;
             var dictColl = transaction.GetCollection(collName);
-            var values = dictColl.AsList.Select(i => i[constraint.AttributeName]);
-            if (values.Count() > values.Distinct().Count())
+            var values = dictColl.AsList.Select(i => i[constraint.AttributeName].ToString());   // TODO: ToString so Dictinct able to work
+            // Distinct does reference equality. Do groupby here to get number of distinct values.
+            if (values.Count() > values.DistinctBy(v => v).Count())
             {
                 throw new ConstraintException($"Violation of unique constraint: Collection: {constraint.CollectionName}, Attribute: {constraint.AttributeName}");
             }

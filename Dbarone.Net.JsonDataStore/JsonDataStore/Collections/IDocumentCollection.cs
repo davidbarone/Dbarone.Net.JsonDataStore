@@ -56,6 +56,8 @@ namespace Dbarone.Net.JsonDataStore
         /// <returns>Returns the number of rows updated / inserted.</returns>
         int Upsert(Predicate<T> where, Func<T, T> update, T insert);
 
+        int Upsert(Predicate<T> where, Func<T, T> update, IEnumerable<T> insert);
+
         /// <summary>
         /// Deletes items from a collection.
         /// </summary>

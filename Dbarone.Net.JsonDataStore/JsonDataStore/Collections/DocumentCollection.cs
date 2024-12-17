@@ -88,4 +88,18 @@ public class DocumentCollection<T> : IDocumentCollection<T>
         }
         return rowsAffected;
     }
+
+    public int Upsert(Predicate<T> where, Func<T, T> update, IEnumerable<T> insert)
+    {
+        int rowsAffected;
+        if (Any(where))
+        {
+            rowsAffected = Update(where, update);
+        }
+        else
+        {
+            rowsAffected = Insert(insert);
+        }
+        return rowsAffected;
+    }
 }
