@@ -165,7 +165,6 @@ public class Transaction : ITransaction
         else
         {
             // we are at the root
-
         }
     }
 
