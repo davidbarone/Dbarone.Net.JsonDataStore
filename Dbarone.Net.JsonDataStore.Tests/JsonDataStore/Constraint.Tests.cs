@@ -137,7 +137,12 @@ public class ConstraintTests
             store.AddRequiredConstraint<FooBarBaz>(f => f.Value);
 
             var coll = store.GetCollection<FooBarBaz>();
-            coll.Insert(new FooBarBaz { Value = null });    // null value not allowed - should throw exception
+            coll.Insert(new FooBarBaz { Value = "foo" });   // this row allowed
+            coll.Insert(new FooBarBaz { Value = null });    // null value not allowed - should throw exception and value should not persist in store.
         });
+
+        // Check 0 rows in collection
+        var coll = store.GetCollection<FooBarBaz>();
+        Assert.Equal(1, coll.Count); // initial row should be in collection only.
     }
 }
