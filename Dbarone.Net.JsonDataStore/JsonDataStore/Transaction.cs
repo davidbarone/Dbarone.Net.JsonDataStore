@@ -258,19 +258,22 @@ public class Transaction : ITransaction
 
     public int Next(string name)
     {
-        int value = 0;
-        var coll = GetSequences();
-        if (coll.Any(c => c.Name.Equals(name)))
+        return AutoCommit<int>((t) =>
         {
-            coll.Update(c => c.Name.Equals(name), c => { c.Value++; return c; });
-            value = coll.Find(c => c.Name.Equals(name)).First().Value;
-        }
-        else
-        {
-            value = 1;
-            coll.Insert(new Sequence { Name = name, Value = 1 });
-        }
-        return value;
+            int value = 0;
+            var coll = t.GetSequences();
+            if (coll.Any(c => c.Name.Equals(name)))
+            {
+                coll.Update(c => c.Name.Equals(name), c => { c.Value++; return c; });
+                value = coll.Find(c => c.Name.Equals(name)).First().Value;
+            }
+            else
+            {
+                value = 1;
+                coll.Insert(new Sequence { Name = name, Value = 1 });
+            }
+            return value;
+        });
     }
 
     public int Next<T>()
@@ -369,8 +372,11 @@ public class Transaction : ITransaction
             {
                 if (IsActive)
                 {
-                    JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
-                    Dom[name] = node;
+                    AutoCommit((t) =>
+                    {
+                        JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
+                        t.Dom[name] = node;
+                    });
                 }
                 else
                 {
@@ -500,5 +506,36 @@ public class Transaction : ITransaction
     {
         var coll = GetCollection<Sequence>("_sequences");
         return coll;
+    }
+
+    /// <summary>
+    /// Runs an action within an implicit transaction.
+    /// </summary>
+    /// <param name="action">The action to perform.</param>
+    private void AutoCommit(Action<ITransaction> action)
+    {
+        AutoCommit<object?>((t) => { action(t); return null; });
+
+    }
+
+    /// <summary>
+    /// Runs an action within an implicit transaction.
+    /// </summary>
+    /// <param name="action">The action to perform.</param>
+    /// <returns>Returns</returns>
+    private T AutoCommit<T>(Func<ITransaction, T> action)
+    {
+        var t = this.BeginTransaction();
+        try
+        {
+            var result = action(t);
+            t.Commit();
+            return (T)result;
+        }
+        catch (Exception)
+        {
+            t.Rollback();
+            throw;
+        }
     }
 }
