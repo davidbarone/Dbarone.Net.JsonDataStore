@@ -144,7 +144,7 @@ public class Transaction : ITransaction
     public void Commit()
     {
         var l = this.Leaf;
-        while (l is not null && l != this)
+        do
         {
             // Validate data in current transaction prior to saving
             CheckIntegrity(l);
@@ -154,7 +154,8 @@ public class Transaction : ITransaction
             l.Parent.Child = null;
             l.Parent = null;
             l = this.Leaf;
-        }
+        } while (l is not null && l != this);
+
         if (this.Parent is not null)
         {
             this.Parent!.Dom = this.Dom.DeepClone();
@@ -222,7 +223,6 @@ public class Transaction : ITransaction
         }
         else
         {
-
             var data = new Lazy<List<T>>(() =>
             {
                 lock (Dom)
@@ -242,8 +242,11 @@ public class Transaction : ITransaction
             {
                 if (IsActive)
                 {
-                    JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
-                    Dom[name] = node;
+                    AutoCommit((t) =>
+                    {
+                        JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
+                        t.Dom[name] = node;
+                    });
                 }
                 else
                 {
@@ -298,12 +301,15 @@ public class Transaction : ITransaction
 
     public void DropConstraints<T>(Expression<Func<T, object>> attribute)
     {
-        var collectionName = typeof(T).Name;
-        var attributeName = attribute.GetMemberPath();
+        AutoCommit((t) =>
+        {
+            var collectionName = typeof(T).Name;
+            var attributeName = attribute.GetMemberPath();
 
-        var constraints = GetConstraints();
-        constraints.Delete(
-            c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName));
+            var constraints = t.GetConstraints();
+            constraints.Delete(
+                c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName));
+        });
     }
 
     public void AddConstraint<T, U>(Expression<Func<T, object>> attribute, ConstraintType constraintType, Expression<Func<U, object>>? references = null)
@@ -325,22 +331,24 @@ public class Transaction : ITransaction
 
     public void AddConstraint(string collectionName, string attributeName, ConstraintType constraintType, string? referenceCollectionName = null, string? referenceAttributeName = null)
     {
-        Constraint newConstraint = new Constraint
+        AutoCommit((t) =>
         {
-            CollectionName = collectionName,
-            AttributeName = attributeName,
-            ConstraintType = constraintType,
-            ReferenceCollectionName = referenceCollectionName,
-            ReferenceAttributeName = referenceAttributeName
-        };
+            Constraint newConstraint = new Constraint
+            {
+                CollectionName = collectionName,
+                AttributeName = attributeName,
+                ConstraintType = constraintType,
+                ReferenceCollectionName = referenceCollectionName,
+                ReferenceAttributeName = referenceAttributeName
+            };
 
-        // Get current constraints
-        var constraints = GetConstraints();
-        constraints.Upsert(
-            c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName)
-            , c => newConstraint
-            , newConstraint);
-
+            // Get current constraints
+            var constraints = t.GetConstraints();
+            constraints.Upsert(
+                c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName)
+                , c => newConstraint
+                , newConstraint);
+        });
     }
 
     public IDocumentCollection<Constraint> GetConstraints()
@@ -424,8 +432,11 @@ public class Transaction : ITransaction
             {
                 if (IsActive)
                 {
-                    JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
-                    Dom[name] = node;
+                    AutoCommit((t) =>
+                    {
+                        JsonNode node = JsonSerializer.SerializeToNode(coll.AsList)!;
+                        t.Dom[name] = node;
+                    });
                 }
                 else
                 {

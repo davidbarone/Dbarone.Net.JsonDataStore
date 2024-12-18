@@ -121,4 +121,23 @@ public class ConstraintTests
             store.Commit(); // commit all transations, and force write of data
         });
     }
+
+    [Fact]
+    public void AutoTransactionRollback()
+    {
+        // even when no transactions created by user, an insert that fails constraint check
+        // should leave database in state before the insert was attempted.
+        // This relies on the auto transaction  AutoCommit() functionality to create
+        // implicit transation even when no transaction specified by user.
+        var store = DataStore.Create("", false);
+
+        Assert.Throws<ConstraintException>(() =>
+        {
+            // Not null constraint on FooBarBaz.Value
+            store.AddRequiredConstraint<FooBarBaz>(f => f.Value);
+
+            var coll = store.GetCollection<FooBarBaz>();
+            coll.Insert(new FooBarBaz { Value = null });    // null value not allowed - should throw exception
+        });
+    }
 }
