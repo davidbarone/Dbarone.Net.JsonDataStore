@@ -74,4 +74,51 @@ public class ConstraintTests
         });
     }
 
+    [Fact]
+    public void ReferenceConstraintDictionary()
+    {
+        var store = DataStore.Create("", false);
+
+        // Add product
+        var r = store.BeginTransaction();
+        var products = r.GetCollection("products");
+        products.Insert(new Dictionary<string, object>() {
+            {"ProductCode", "A"},
+            {"ProductName", "Test Product"}
+        });
+
+        // Add sales table
+        var sales = r.GetCollection("sales");
+
+        // Add reference constraint
+        r.AddConstraint("sales", "ProductCode", ConstraintType.REFERENCE, "products", "ProductCode");
+
+        // Add 1 sales record which is valid
+        sales.Insert(new Dictionary<string, object>()
+        {
+            {"SalesDate", DateTime.Now },
+            {"ProductCode", "A"},
+            {"Quantity", 1 },
+            {"SalesAmount", 10 }
+        });
+
+        r.Commit();
+
+        Assert.Throws<ConstraintException>(() =>
+        {
+            var u = store.BeginTransaction();
+
+            // Add 1 sales record which is not valid
+            var sales = u.GetCollection("sales");
+
+            sales.Insert(new Dictionary<string, object>() {
+                {"SalesDate", DateTime.Now },
+                {"ProductCode", "B"},   // no 'B' product code
+                {"Quantity", 1 },
+                {"SalesAmount", 10 }
+            });
+
+            store.Commit(); // commit all transations, and force write of data
+        });
+    }
 }

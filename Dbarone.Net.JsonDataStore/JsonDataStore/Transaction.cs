@@ -306,27 +306,32 @@ public class Transaction : ITransaction
             c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName));
     }
 
-    private void AddConstraint<T, U>(Expression<Func<T, object>> attribute, ConstraintType constraintType, Expression<Func<U, object>>? references = null)
+    public void AddConstraint<T, U>(Expression<Func<T, object>> attribute, ConstraintType constraintType, Expression<Func<U, object>>? references = null)
     {
         var collectionName = typeof(T).Name;
         var attributeName = attribute.GetMemberPath();
 
-        string? referenceCollection = null;
-        string? referenceAttribute = null;
+        string? referenceCollectionName = null;
+        string? referenceAttributeName = null;
 
         if (references is not null)
         {
-            referenceCollection = typeof(U).Name;
-            referenceAttribute = references.GetMemberPath();
+            referenceCollectionName = typeof(U).Name;
+            referenceAttributeName = references.GetMemberPath();
         }
 
+        AddConstraint(collectionName, attributeName, constraintType, referenceCollectionName, referenceAttributeName);
+    }
+
+    public void AddConstraint(string collectionName, string attributeName, ConstraintType constraintType, string? referenceCollectionName = null, string? referenceAttributeName = null)
+    {
         Constraint newConstraint = new Constraint
         {
             CollectionName = collectionName,
             AttributeName = attributeName,
             ConstraintType = constraintType,
-            ReferenceCollectionName = referenceCollection,
-            ReferenceAttributeName = referenceAttribute
+            ReferenceCollectionName = referenceCollectionName,
+            ReferenceAttributeName = referenceAttributeName
         };
 
         // Get current constraints
@@ -335,6 +340,7 @@ public class Transaction : ITransaction
             c => c.CollectionName.Equals(collectionName) && c.AttributeName.Equals(attributeName)
             , c => newConstraint
             , newConstraint);
+
     }
 
     public IDocumentCollection<Constraint> GetConstraints()

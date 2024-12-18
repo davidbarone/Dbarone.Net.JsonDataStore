@@ -23,6 +23,7 @@ public interface ITransaction
     bool IsActive { get; }
     bool IsLeaf { get; }
     bool IsDirty { get; set; }
+    void CheckIntegrity(ITransaction transaction);
 
     #endregion
 
@@ -63,9 +64,9 @@ public interface ITransaction
     void AddRequiredConstraint<T>(Expression<Func<T, object>> attribute);
     void AddUniqueConstraint<T>(Expression<Func<T, object>> attribute);
     void AddReferenceConstraint<T, U>(Expression<Func<T, object>> attribute, Expression<Func<U, object>> references);
+    public void AddConstraint<T, U>(Expression<Func<T, object>> attribute, ConstraintType constraintType, Expression<Func<U, object>>? references = null);
+    public void AddConstraint(string collectionName, string attributeName, ConstraintType constraintType, string? referenceCollectionName = null, string? referenceAttributeName = null);
     void DropConstraints<T>(Expression<Func<T, object>> attribute);
-    void CheckIntegrity(ITransaction transaction);
 
     #endregion
-
 }
