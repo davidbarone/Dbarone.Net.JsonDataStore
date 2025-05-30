@@ -4,11 +4,20 @@ namespace Dbarone.Net.JsonDataStore.Tests;
 
 public class ParserTests
 {
-    [Fact]
-    public void CreateCollection1()
+    [Theory]
+    [InlineData("123", "unsigned_integer", true)]
+    [InlineData("+", "sign", true)]
+    [InlineData("-", "sign", true)]
+    [InlineData(".123", "exact_numeric_literal", true)]
+    [InlineData("0.123", "exact_numeric_literal", true)]
+    [InlineData("123.456", "exact_numeric_literal", true)]
+    [InlineData("-123", "signed_integer", true)]
+    [InlineData("+123", "signed_integer", true)]
+    [InlineData("1E10", "approximate_numeric_literal", true)]
+    [InlineData("1e10", "approximate_numeric_literal", true)]
+    public void TestGrammar(string input, string rootProductionRule, bool isValid)
     {
-        var input = "CREATE COLLECTION myCollection (A)";
-        var ast = Parser.Parse(input);
+        var ast = Parser.Parse(input, rootProductionRule);
         var a = ast;
     }
 }
