@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dbarone.Net.Extensions" Version="2.0.2" />
+    <PackageReference Include="Dbarone.Net.Parser" Version="1.0.1" />
   </ItemGroup>
 
 </Project>

@@ -38,3 +38,12 @@ public class Main
     }
 }
 ```
+
+
+### Query Language
+CREATETABLE(name, colname, coltype, nullable)
+SETKEY(table, column)
+INSERTROWS(tablename, rows)
+DELETEROWS (table)
+UPDATEROWS(table)
+EVALUATE(table)
