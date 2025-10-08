@@ -22,7 +22,6 @@ public class FileStorage : Storage
 
     protected override Stream CreateStream(StreamMode mode)
     {
-
         var fs = new FileStream(_path, _mode, FileAccess.ReadWrite, FileShare.None);
         if (string.IsNullOrEmpty(_password))
         {

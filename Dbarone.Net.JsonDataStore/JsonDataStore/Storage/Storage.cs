@@ -71,7 +71,10 @@ public class Storage : IStorage
             {
                 writer.Write(json);
             }
+            // truncate stream at current position - important after deletes which reduce file size.
+            stream.SetLength(stream.Position);
         }
+
     }
 
     public bool IsNew
