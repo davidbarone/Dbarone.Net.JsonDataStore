@@ -70,9 +70,12 @@ public class Storage : IStorage
             using (var writer = new StreamWriter(stream, Encoding.UTF8, -1, false))
             {
                 writer.Write(json);
+                // truncate stream at current position - important after deletes which reduce file size.
+                if (stream.CanSeek)
+                {
+                    stream.SetLength(stream.Position);
+                }
             }
-            // truncate stream at current position - important after deletes which reduce file size.
-            stream.SetLength(stream.Position);
         }
 
     }
