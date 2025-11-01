@@ -68,9 +68,15 @@ public class DocumentCollection<T> : IDocumentCollection<T>
 
     public int Update(Predicate<T> where, Func<T, T> transform)
     {
-        var data = _data.Value.Where(i => where(i)).ToList();
-        var rowsAffected = data.Count();
-        data.ForEach(i => i = transform(i));
+        // Note that C# lists are immutable, so we create a copy
+        // instead of inline .ForEach.
+        // As the _data is also readonly, we update by:
+        // 1. removing all items from lazy list
+        // 2. adding new range of all updated / unchanged items
+        int rowsAffected = 0;
+        var updated = _data.Value.Select(i => { if (where(i)) { rowsAffected++; return transform(i); } else return i; }).ToArray();
+        _data.Value.RemoveAll(i => true);
+        _data.Value.AddRange(updated);
         _modificationCallback(this);
         return rowsAffected;
     }

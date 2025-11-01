@@ -133,4 +133,45 @@ public class DataStoreTests : BaseTests
         id = store.Next<User>();
         Assert.Equal(3, id);
     }
+
+    [Fact]
+    public void MultipleFileSave()
+    {
+        var file = "EntityWithId.json";
+        var store = DataStore.Create(file, "", false);
+        for (int i = 1; i <= 100; i++)
+        {
+
+            // insert
+            var ds = DataStore.Open(file, "", false);
+            var t = ds.BeginTransaction();
+            var id = t.Next<EntityWithId>();
+            var coll = t.GetCollection<EntityWithId>();
+            EntityWithId item = new EntityWithId
+            {
+                Id = id,
+                Value = "a"
+            };
+            coll.Insert(item);
+            t.Commit();
+            ds.Save();
+
+            // update
+            ds = DataStore.Open(file, "", false);
+            t = ds.BeginTransaction();
+            coll = t.GetCollection<EntityWithId>();
+            item = coll.Find(i => i.Id == id).First();
+            item.Value = "b";
+            coll.Delete(i => i.Id == id);
+            coll.Insert(item);
+            t.Commit();
+            ds.Save();
+        }
+
+        var ds1 = DataStore.Open(file, "", true);
+        var t1 = ds1.BeginTransaction();
+        var coll1 = t1.GetCollection<EntityWithId>();
+        Assert.Equal(100, coll1.Count);
+        Assert.Equal(100, coll1.Find(i => i.Value == "b").Count());
+    }
 }

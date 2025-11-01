@@ -36,6 +36,7 @@ public class DataStore : Transaction, IDataStore
     /// </summary>
     /// <param name="path">The file path.</param>
     /// <param name="password">Optional password for the data store.</param>
+    /// <param name="autoSave">Set to true for database to auto-save every 1 second. If not set, you will need to manually save each time.</param>
     /// <returns>Returns a DataStore object.</returns>
     public static DataStore Create(string path, string password, bool autoSave)
     {
@@ -49,6 +50,7 @@ public class DataStore : Transaction, IDataStore
     /// </summary>
     /// <param name="path">The file path.</param>
     /// <param name="password">Optional password for the data store.</param>
+    /// <param name="autoSave">Set to true for database to auto-save every 1 second. If not set, you will need to manually save each time.</param>
     /// <returns>Returns a DataStore object.</returns>
     public static DataStore Open(string path, string password, bool autoSave)
     {
@@ -70,7 +72,7 @@ public class DataStore : Transaction, IDataStore
         this.Dom = _storage.ReadNode();
     }
 
-    public void Save(bool loop)
+    public void Save(bool loop = false)
     {
         do
         {

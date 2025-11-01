@@ -38,6 +38,29 @@ public class DocumentCollectionTests : BaseTests
     }
 
     [Fact]
+    public void Update2()
+    {
+        var str = this.GetJsonStream("simple.json").ToText();
+        var store = DataStore.Create(str, false);
+        var users = store.GetCollection<User>("users");
+
+        // Update all users country
+        User newUser = new User
+        {
+            Country = "Country",
+            FirstName = "FirstName",
+            Surname = "Surname"
+        };
+
+        users.Update(u => u.Country == "USA", (u) => { u = newUser; return newUser; });
+
+        // Asserts
+        Assert.Equal(2, users.Count);
+        Assert.All(users.AsList, user => Assert.Equal("Country", user.Country));
+    }
+
+
+    [Fact]
     public void Delete()
     {
         var str = this.GetJsonStream("simple.json").ToText();
