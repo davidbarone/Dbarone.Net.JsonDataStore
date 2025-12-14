@@ -68,13 +68,14 @@ E_CHARACTER = ""E"";
 simple_latin_upper_case_letter = CHAR_A | CHAR_B | CHAR_C | CHAR_D | CHAR_E | CHAR_F | CHAR_G | CHAR_H | CHAR_I | CHAR_J | CHAR_K | CHAR_L | CHAR_M | CHAR_N | CHAR_O | CHAR_P | CHAR_Q | CHAR_R | CHAR_S | CHAR_T | CHAR_U | CHAR_V | CHAR_W | CHAR_X | CHAR_Y | CHAR_Z;
 unsigned_integer = DIGITS:DIGIT+;
 sign = SIGN:PLUS_SIGN | SIGN:MINUS_SIGN;
+exact_numeric_literal = (unsigned_integer, (PERIOD, unsigned_integer)?) | PERIOD, unsigned_integer;
 signed_integer = sign?, unsigned_integer;
-exact_numeric_literal = (unsigned_integer, (period, unsigned_integer)?) | period, unsigned_integer;
 mantissa = exact_numeric_literal;
 exponent_character = CHAR_E;
 exponent = unsigned_integer | signed_integer;
 approximate_numeric_literal = mantissa, exponent_character, exponent;
-
+unsigned_numeric_literal = approximate_numeric_literal | exact_numeric_literal;
+signed_numeric_literal = sign?, unsigned_numeric_literal;
 ";
 
     public static Node Parse(string input, string rootProductionRule)

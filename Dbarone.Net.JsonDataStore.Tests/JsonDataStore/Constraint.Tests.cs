@@ -49,13 +49,13 @@ public class ConstraintTests
         // Add product
         var r = store.BeginTransaction();
         var products = r.GetCollection<Product>();
-        products.Insert(new Product { ProductCode = "A", ProductName = "Product A" });
+        products.Insert(new Product { Code = "A", Name = "Product A" });
 
         // Add sales table
         var sales = r.GetCollection<Sales>();
 
         // Add reference constraint
-        r.AddReferenceConstraint<Sales, Product>(s => s.ProductCode, p => p.ProductCode);
+        r.AddReferenceConstraint<Sales, Product>(s => s.ProductCode, p => p.Code);
 
         // Add 1 sales record which is valid
         sales.Insert(new Sales { SalesDate = DateTime.Now, ProductCode = "A", Quantity = 1, SalesAmount = 10 });

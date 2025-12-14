@@ -4,11 +4,21 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <PackageId>Dbarone.Net.JsonDataStore</PackageId>
+    <Version>1.0.1</Version>
+    <Authors>David Barone</Authors>
+    <Company>Dbarone.com</Company>
+    <Description>A simple json data store built in .NET.</Description>
+    <RepositoryUrl>https://github.com/davidbarone/Dbarone.Net.JsonDataStore</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/davidbarone/Dbarone.Net.JsonDataStore</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>    
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Dbarone.Net.Extensions" Version="2.0.2" />
     <PackageReference Include="Dbarone.Net.Parser" Version="1.0.1" />
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

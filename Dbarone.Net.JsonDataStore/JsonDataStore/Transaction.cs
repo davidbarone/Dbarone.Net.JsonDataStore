@@ -504,7 +504,7 @@ public class Transaction : ITransaction
             var referenceDictColl = transaction.GetCollection(referenceCollName!);
 
             var values = dictColl.AsList.Select(i => i[constraint.AttributeName].ToString());   // TODO: ToString so Dictinct able to work
-            var referenceValues = referenceDictColl.AsList.Select(i => i[constraint.AttributeName].ToString());   // TODO: ToString so Dictinct able to work
+            var referenceValues = referenceDictColl.AsList.Select(i => i[constraint.ReferenceAttributeName!].ToString());   // TODO: ToString so Dictinct able to work
 
             if (values.Except(referenceValues).Any())
             {
